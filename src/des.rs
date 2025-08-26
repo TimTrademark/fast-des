@@ -1,9 +1,6 @@
 use std::ops::{BitAnd, BitOr, Shl, Shr};
 
-use crate::{
-    constants::{E, IP, IP_INV, P, PC_1, PC_2, S_BOXES},
-    utils::{print_binary_u32, print_binary_u64},
-};
+use crate::constants::{E, IP, IP_INV, P, PC_1, PC_2, S_BOXES};
 
 const C_D_MASK: u64 = 0b1111_1111_1111_1111_1111_1111_1111;
 
@@ -109,6 +106,8 @@ where
 
 #[cfg(test)]
 mod tests {
+    use crate::des_optimized::encrypt;
+
     // Note this useful idiom: importing names from outer (for mod tests) scope.
     use super::*;
 
