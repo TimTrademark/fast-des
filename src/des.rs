@@ -106,7 +106,6 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::des_optimized::encrypt;
 
     // Note this useful idiom: importing names from outer (for mod tests) scope.
     use super::*;

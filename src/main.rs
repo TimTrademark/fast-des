@@ -17,14 +17,15 @@ fn main() {
 fn start_benchmark(benchmark_name: &str) {
     match benchmark_name {
         "n" | "normal" | "normal_des" => {
-            benchmark("normal_des", 1_000_000, 10000, || {
+            benchmark("normal_des", 100_000, 10000, 1, || {
                 des(PLAINTEXT, KEY);
             });
         }
         "f" | "fast" | "fast_des" => {
-            let keys: [u64; 64] = vec![0xABCDEF1234567890u64; 64].try_into().unwrap();
-            benchmark("fast_des", 1_000_000, 10000, || {
-                des_optimized(PLAINTEXT, keys);
+            let keys = [[0x133457799BBCDFF1u64; 64]; 8];
+
+            benchmark("fast_des", 100_000, 10000, 64 * 8, || {
+                des_optimized::<8>(PLAINTEXT, &keys);
             });
         }
         _ => {
