@@ -8,13 +8,14 @@ This crate was made for the sole purpose of fast encryption on a single plaintex
 
 ## Benchmarks (Intel i5-8500)
 
-| Type | Hashrate |
+| Type           | Hashrate   |
+|----------------|------------|
 | Normal DES | 457.29KH/s |
 | Bitsliced DES | 5.56MH/s |
 
 ## Further improvements
 
-- [] Use CPU SIMD (can give up to 8x performance improvement depending on the register width)
-- [] Optimize ILP in encrypt_optimized
-- [] Support different plaintexts in bitsliced version
-- [] Support decryption
+- [ ] Use CPU SIMD (can give up to 8x performance improvement depending on the register width)
+- [ ] Optimize ILP in encrypt_optimized
+- [ ] Support different plaintexts in bitsliced version
+- [ ] Support decryption
