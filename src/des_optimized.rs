@@ -47,35 +47,24 @@ pub fn create_subkeys_optimized(c0: [u64; 28], d0: [u64; 28]) -> [[u64; 48]; 16]
 }
 
 //TODO: create a version where IP is precomputed
-pub fn encrypt_optimized<const N: usize>(
-    plaintext: u64,
-    subkeys: [[[u64; 48]; 16]; N],
-) -> [[u64; 64]; N] {
+pub fn encrypt_optimized(plaintext: u64, subkeys: [[u64; 48]; 16]) -> [u64; 64] {
     let ip = permute_bits_pc(&IP, plaintext, 64);
     //repeat and transpote IP
     let ip_bitsliced = transpose_u64_to_bitsliced(&vec![ip; 64]);
-    let l: [u64; 32] = ip_bitsliced[0..32].try_into().unwrap();
-    let r: [u64; 32] = ip_bitsliced[32..64].try_into().unwrap();
-
-    let mut l: [[u64; 32]; N] = vec![l; N].try_into().unwrap();
-    let mut r: [[u64; 32]; N] = vec![r; N].try_into().unwrap();
+    let mut l: [u64; 32] = ip_bitsliced[0..32].try_into().unwrap();
+    let mut r: [u64; 32] = ip_bitsliced[32..64].try_into().unwrap();
 
     for i in 0..16 {
-        for n in 0..N {
-            let (new_l, new_r) = feistel_function_optimized(l[n], r[n], subkeys[n][i]);
-            l[n] = new_l;
-            r[n] = new_r;
-        }
+        let (new_l, new_r) = feistel_function_optimized(l, r, subkeys[i]);
+        l = new_l;
+        r = new_r;
     }
-    let mut r_l = [[0u64; 64]; N];
-    let mut fp = [[0u64; 64]; N];
-    for n in 0..N {
-        r_l[n][..32].copy_from_slice(&r[n]);
-        r_l[n][32..].copy_from_slice(&l[n]);
-
-        for (i, &src) in IP_INVO.iter().enumerate() {
-            fp[n][i] = r_l[n][src as usize];
-        }
+    let mut r_l = [0u64; 64];
+    let mut fp = [0u64; 64];
+    r_l[..32].copy_from_slice(&r);
+    r_l[32..].copy_from_slice(&l);
+    for (i, &src) in IP_INVO.iter().enumerate() {
+        fp[i] = r_l[src as usize];
     }
     fp
 }
