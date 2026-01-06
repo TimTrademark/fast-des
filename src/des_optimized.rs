@@ -24,23 +24,19 @@ pub fn compute_pc1_optimized(k_slices: [u64; 64]) -> ([u64; 28], [u64; 28]) {
 
 const SHIFTS: [u32; 16] = [1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1];
 
-pub fn create_subkeys_optimized(c0: [u64; 28], d0: [u64; 28]) -> [[u64; 48]; 16] {
+pub fn create_subkeys_optimized(c0: &mut [u64; 28], d0: &mut [u64; 28]) -> [[u64; 48]; 16] {
     let mut subkeys = [[0u64; 48]; 16];
-    let mut c = c0;
-    let mut d = d0;
 
     for (index, s) in SHIFTS.iter().enumerate() {
-        c.rotate_left(*s as usize);
-        d.rotate_left(*s as usize);
-        let mut cd = [0u64; 56];
-        cd[..28].copy_from_slice(&c);
-        cd[28..].copy_from_slice(&d);
-
-        let mut k = [0u64; 48];
+        c0.rotate_left(*s as usize);
+        d0.rotate_left(*s as usize);
         for (i, &src) in PC_2O.iter().enumerate() {
-            k[i] = cd[src as usize];
+            if (src < 28) {
+                subkeys[index][i] = c0[src as usize]
+            } else {
+                subkeys[index][i] = d0[(src - 28) as usize];
+            }
         }
-        subkeys[index] = k;
     }
 
     subkeys
@@ -217,14 +213,14 @@ mod tests {
     #[test]
     fn test_create_subkeys_optimized_works() {
         //as this is a test, we're only populating the first column
-        let c0: [u64; 28] = [
+        let mut c0: [u64; 28] = [
             1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1,
         ];
-        let d0: [u64; 28] = [
+        let mut d0: [u64; 28] = [
             0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1,
         ];
 
-        let subkeys = create_subkeys_optimized(c0, d0);
+        let subkeys = create_subkeys_optimized(&mut c0, &mut d0);
 
         let transposed = transpose_bitsliced_to_u64(&subkeys[0]);
         let k0 = transposed[0];

@@ -22,8 +22,8 @@ pub fn des(plaintext: u64, key: u64) -> u64 {
 
 pub fn des_optimized(plaintext: u64, keys: &[u64; 64]) -> [u64; 64] {
     let k_slice = transpose_u64_to_bitsliced(keys);
-    let (c0, d0) = compute_pc1_optimized(k_slice);
-    let subkeys = create_subkeys_optimized(c0, d0);
+    let (mut c0, mut d0) = compute_pc1_optimized(k_slice);
+    let subkeys = create_subkeys_optimized(&mut c0, &mut d0);
 
     let encrypted = encrypt_optimized(plaintext, subkeys);
     let ciphertext = transpose_bitsliced_to_u64(&encrypted);
