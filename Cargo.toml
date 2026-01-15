@@ -4,4 +4,5 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-des = "0.8.1"
+bitsliced-op = "0.5.0"
+wide = "1.1.1"
