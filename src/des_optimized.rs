@@ -1,15 +1,18 @@
 use std::ops::{BitAnd, BitOr, Shl, Shr};
 
 use crate::{
+    ZERO,
     constants::{EO, IP, IP_INVO, PC_1O, PC_2O, PO},
     sbox_optimized::{s1, s2, s3, s4, s5, s6, s7, s8},
 };
+use bitsliced_op::transpose_64x64;
+use wide::u64x8;
 
 //slice[i] contains bit with index i of all 64 slices
 // a column is equal to one item/number
-pub fn compute_pc1_optimized(k_slices: [u64; 64]) -> ([u64; 28], [u64; 28]) {
-    let mut c0 = [0u64; 28];
-    let mut d0 = [0u64; 28];
+pub fn compute_pc1_optimized(k_slices: &[u64x8; 64]) -> ([u64x8; 28], [u64x8; 28]) {
+    let mut c0 = [ZERO; 28];
+    let mut d0 = [ZERO; 28];
 
     for (i, &src) in PC_1O.iter().enumerate() {
         if i < 28 {
@@ -24,14 +27,14 @@ pub fn compute_pc1_optimized(k_slices: [u64; 64]) -> ([u64; 28], [u64; 28]) {
 
 const SHIFTS: [u32; 16] = [1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1];
 
-pub fn create_subkeys_optimized(c0: &mut [u64; 28], d0: &mut [u64; 28]) -> [[u64; 48]; 16] {
-    let mut subkeys = [[0u64; 48]; 16];
+pub fn create_subkeys_optimized(c0: &mut [u64x8; 28], d0: &mut [u64x8; 28]) -> [[u64x8; 48]; 16] {
+    let mut subkeys = [[ZERO; 48]; 16];
 
     for (index, s) in SHIFTS.iter().enumerate() {
         c0.rotate_left(*s as usize);
         d0.rotate_left(*s as usize);
         for (i, &src) in PC_2O.iter().enumerate() {
-            if (src < 28) {
+            if src < 28 {
                 subkeys[index][i] = c0[src as usize]
             } else {
                 subkeys[index][i] = d0[(src - 28) as usize];
@@ -43,45 +46,41 @@ pub fn create_subkeys_optimized(c0: &mut [u64; 28], d0: &mut [u64; 28]) -> [[u64
 }
 
 //TODO: create a version where IP is precomputed
-pub fn encrypt_optimized(plaintext: u64, subkeys: [[u64; 48]; 16]) -> [u64; 64] {
+pub fn encrypt_optimized(plaintext: u64, subkeys: [[u64x8; 48]; 16], output: &mut [u64x8; 64]) {
     let ip = permute_bits_pc(&IP, plaintext, 64);
     //repeat and transpote IP
-    let ip_bitsliced = transpose_u64_to_bitsliced(&vec![ip; 64]);
-    let mut l: [u64; 32] = ip_bitsliced[0..32].try_into().unwrap();
-    let mut r: [u64; 32] = ip_bitsliced[32..64].try_into().unwrap();
+    let ip_bitsliced = transpose_64x64(&[ip; 64]);
+    let mut l: [u64x8; 32] = std::array::from_fn(|i| u64x8::splat(ip_bitsliced[i]));
+    let mut r: [u64x8; 32] = std::array::from_fn(|i| u64x8::splat(ip_bitsliced[i + 32]));
 
     for i in 0..16 {
         let (new_l, new_r) = feistel_function_optimized(l, r, subkeys[i]);
         l = new_l;
         r = new_r;
     }
-    let mut r_l = [0u64; 64];
-    let mut fp = [0u64; 64];
+    let mut r_l = [ZERO; 64];
     r_l[..32].copy_from_slice(&r);
     r_l[32..].copy_from_slice(&l);
     for (i, &src) in IP_INVO.iter().enumerate() {
-        fp[i] = r_l[src as usize];
+        output[i] = r_l[src as usize];
     }
-    fp
 }
 
-//TODO: make this function generic and calculate all s-box outputs
-// for all pipelines to achieve better ILP
 #[inline(always)]
 fn feistel_function_optimized(
-    l: [u64; 32],
-    r: [u64; 32],
-    subkey: [u64; 48],
-) -> ([u64; 32], [u64; 32]) {
+    l: [u64x8; 32],
+    r: [u64x8; 32],
+    subkey: [u64x8; 48],
+) -> ([u64x8; 32], [u64x8; 32]) {
     let new_l = r;
-    let mut e = [0u64; 48];
+    let mut e = [ZERO; 48];
     for (i, &src) in EO.iter().enumerate() {
         e[i] = r[src as usize];
     }
     for i in 0..48 {
         e[i] ^= subkey[i];
     }
-    let mut output: [u64; 32] = [0u64; 32];
+    let mut output: [u64x8; 32] = [ZERO; 32];
 
     let s1_output = s1(e[0], e[1], e[2], e[3], e[4], e[5]);
     let s2_output = s2(e[6], e[7], e[8], e[9], e[10], e[11]);
@@ -138,7 +137,7 @@ fn feistel_function_optimized(
     output[29] = s8_output.1;
     output[30] = s8_output.2;
     output[31] = s8_output.3;
-    let mut new_r = [0u64; 32];
+    let mut new_r = [ZERO; 32];
     for (i, &src) in PO.iter().enumerate() {
         new_r[i] = output[src as usize];
     }
@@ -174,72 +173,4 @@ where
         + From<u64>,
 {
     ((input >> (input_length - input_index)) & T::from(1)) << (output_length - output_index)
-}
-
-//TODO: replace with an optimized version
-pub fn transpose_bitsliced_to_u64(rows: &[u64]) -> [u64; 64] {
-    let mut cols = [0u64; 64];
-    let rows_len = rows.len();
-    for (bitpos, &row) in rows.iter().enumerate() {
-        for col in 0..64 {
-            let bit = (row >> col) & 1;
-            cols[col] |= bit << rows_len - 1 - bitpos;
-        }
-    }
-    cols
-}
-
-pub fn transpose_u64_to_bitsliced(numbers: &[u64]) -> [u64; 64] {
-    let mut rows = [0u64; 64];
-    let mut row_index = 0;
-    let rows_len = rows.len();
-    while row_index < rows_len {
-        for i in 0..rows_len {
-            //get bit with index row_index for number
-            let bit = (numbers[i] >> (rows_len - 1 - row_index)) & 0b1;
-            //set bit at column i in row with row index row_index
-            rows[row_index] |= bit << (rows_len - 1 - i);
-        }
-        row_index += 1;
-    }
-    rows
-}
-
-#[cfg(test)]
-mod tests {
-    // Note this useful idiom: importing names from outer (for mod tests) scope.
-    use super::*;
-
-    #[test]
-    fn test_create_subkeys_optimized_works() {
-        //as this is a test, we're only populating the first column
-        let mut c0: [u64; 28] = [
-            1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1,
-        ];
-        let mut d0: [u64; 28] = [
-            0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1,
-        ];
-
-        let subkeys = create_subkeys_optimized(&mut c0, &mut d0);
-
-        let transposed = transpose_bitsliced_to_u64(&subkeys[0]);
-        let k0 = transposed[0];
-
-        let transposed = transpose_bitsliced_to_u64(&subkeys[15]);
-        let k15 = transposed[0];
-        dbg!(format!("{:b}", k0));
-        assert_eq!(k0, 0b000110110000001011101111111111000111000001110010);
-        assert_eq!(k15, 0b110010110011110110001011000011100001011111110101);
-    }
-
-    #[test]
-    fn test_transpose_int_to_bitsliced_works() {
-        let number: u64 = 0b1011;
-        let numbers = vec![number; 64];
-        let output = transpose_u64_to_bitsliced(&numbers);
-        assert_eq!(output[60], 0xFFFFFFFFFFFFFFFF);
-        assert_eq!(output[61], 0);
-        assert_eq!(output[62], 0xFFFFFFFFFFFFFFFF);
-        assert_eq!(output[63], 0xFFFFFFFFFFFFFFFF);
-    }
 }

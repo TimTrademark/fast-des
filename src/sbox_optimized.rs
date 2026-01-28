@@ -1,4 +1,15 @@
-pub fn s1(a1: u64, a2: u64, a3: u64, a4: u64, a5: u64, a6: u64) -> (u64, u64, u64, u64) {
+use wide::u64x8;
+
+use crate::ZERO;
+
+pub fn s1(
+    a1: u64x8,
+    a2: u64x8,
+    a3: u64x8,
+    a4: u64x8,
+    a5: u64x8,
+    a6: u64x8,
+) -> (u64x8, u64x8, u64x8, u64x8) {
     let (
         mut x55005500,
         mut x5A0F5A0F,
@@ -50,16 +61,16 @@ pub fn s1(a1: u64, a2: u64, a3: u64, a4: u64, a5: u64, a6: u64) -> (u64, u64, u6
         mut x30,
         mut x31,
     ) = (
-        0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64,
-        0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64,
-        0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64,
-        0u64, 0u64, 0u64, 0u64,
+        ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO,
+        ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO,
+        ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO,
+        ZERO, ZERO, ZERO, ZERO,
     );
 
-    let mut out1 = 0u64;
-    let mut out2 = 0u64;
-    let mut out3 = 0u64;
-    let mut out4 = 0u64;
+    let mut out1 = ZERO;
+    let mut out2 = ZERO;
+    let mut out3 = ZERO;
+    let mut out4 = ZERO;
 
     x55005500 = a1 & !a5;
     x5A0F5A0F = a4 ^ x55005500;
@@ -125,7 +136,14 @@ pub fn s1(a1: u64, a2: u64, a3: u64, a4: u64, a5: u64, a6: u64) -> (u64, u64, u6
     (out1, out2, out3, out4)
 }
 
-pub fn s2(a1: u64, a2: u64, a3: u64, a4: u64, a5: u64, a6: u64) -> (u64, u64, u64, u64) {
+pub fn s2(
+    a1: u64x8,
+    a2: u64x8,
+    a3: u64x8,
+    a4: u64x8,
+    a5: u64x8,
+    a6: u64x8,
+) -> (u64x8, u64x8, u64x8, u64x8) {
     let (
         mut x33CC33CC,
         mut x55550000,
@@ -172,15 +190,15 @@ pub fn s2(a1: u64, a2: u64, a3: u64, a4: u64, a5: u64, a6: u64) -> (u64, u64, u6
         mut x30,
         mut x31,
     ) = (
-        0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64,
-        0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64,
-        0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64,
+        ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO,
+        ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO,
+        ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO,
     );
 
-    let mut out1 = 0u64;
-    let mut out2 = 0u64;
-    let mut out3 = 0u64;
-    let mut out4 = 0u64;
+    let mut out1 = ZERO;
+    let mut out2 = ZERO;
+    let mut out3 = ZERO;
+    let mut out4 = ZERO;
 
     x33CC33CC = a2 ^ a5;
 
@@ -242,7 +260,14 @@ pub fn s2(a1: u64, a2: u64, a3: u64, a4: u64, a5: u64, a6: u64) -> (u64, u64, u6
     (out1, out2, out3, out4)
 }
 
-pub fn s3(a1: u64, a2: u64, a3: u64, a4: u64, a5: u64, a6: u64) -> (u64, u64, u64, u64) {
+pub fn s3(
+    a1: u64x8,
+    a2: u64x8,
+    a3: u64x8,
+    a4: u64x8,
+    a5: u64x8,
+    a6: u64x8,
+) -> (u64x8, u64x8, u64x8, u64x8) {
     let (mut x44444444, mut x0F0FF0F0, mut x4F4FF4F4, mut x00FFFF00, mut x00AAAA00, mut x4FE55EF4);
     let (mut x3C3CC3C3, mut x3C3C0000, mut x7373F4F4, mut x0C840A00);
     let (mut x00005EF4, mut x00FF5EFF, mut x00555455, mut x3C699796);
@@ -253,10 +278,10 @@ pub fn s3(a1: u64, a2: u64, a3: u64, a4: u64, a5: u64, a6: u64) -> (u64, u64, u6
     let (mut xD6E9C3D6, mut x4CEEEEC4, mut x9A072D12, mut x001A000B, mut x9A1F2D1B);
     let (mut x00, mut x01, mut x10, mut x11, mut x20, mut x21, mut x30, mut x31);
 
-    let mut out1 = 0u64;
-    let mut out2 = 0u64;
-    let mut out3 = 0u64;
-    let mut out4 = 0u64;
+    let mut out1 = ZERO;
+    let mut out2 = ZERO;
+    let mut out3 = ZERO;
+    let mut out4 = ZERO;
 
     x44444444 = a1 & !a2;
     x0F0FF0F0 = a3 ^ a6;
@@ -318,45 +343,52 @@ pub fn s3(a1: u64, a2: u64, a3: u64, a4: u64, a5: u64, a6: u64) -> (u64, u64, u6
     (out1, out2, out3, out4)
 }
 
-pub fn s4(a1: u64, a2: u64, a3: u64, a4: u64, a5: u64, a6: u64) -> (u64, u64, u64, u64) {
-    let mut x5A5A5A5A: u64;
-    let mut x0F0FF0F0: u64;
-    let mut x33FF33FF: u64;
-    let mut x33FFCC00: u64;
-    let mut x0C0030F0: u64;
-    let mut x0C0CC0C0: u64;
-    let mut x0CF3C03F: u64;
-    let mut x5EFBDA7F: u64;
-    let mut x52FBCA0F: u64;
-    let mut x61C8F93C: u64;
-    let mut x00C0C03C: u64;
-    let mut x0F0F30C0: u64;
-    let mut x3B92A366: u64;
-    let mut x30908326: u64;
-    let mut x3C90B3D6: u64;
-    let mut x33CC33CC: u64;
-    let mut x0C0CFFFF: u64;
-    let mut x379E5C99: u64;
-    let mut x04124C11: u64;
-    let mut x56E9861E: u64;
-    let mut xA91679E1: u64;
-    let mut x9586CA37: u64;
-    let mut x8402C833: u64;
-    let mut x84C2C83F: u64;
-    let mut xB35C94A6: u64;
-    let mut x00: u64;
-    let mut x01: u64;
-    let mut x10: u64;
-    let mut x11: u64;
-    let mut x20: u64;
-    let mut x21: u64;
-    let mut x30: u64;
-    let mut x31: u64;
+pub fn s4(
+    a1: u64x8,
+    a2: u64x8,
+    a3: u64x8,
+    a4: u64x8,
+    a5: u64x8,
+    a6: u64x8,
+) -> (u64x8, u64x8, u64x8, u64x8) {
+    let mut x5A5A5A5A: u64x8;
+    let mut x0F0FF0F0: u64x8;
+    let mut x33FF33FF: u64x8;
+    let mut x33FFCC00: u64x8;
+    let mut x0C0030F0: u64x8;
+    let mut x0C0CC0C0: u64x8;
+    let mut x0CF3C03F: u64x8;
+    let mut x5EFBDA7F: u64x8;
+    let mut x52FBCA0F: u64x8;
+    let mut x61C8F93C: u64x8;
+    let mut x00C0C03C: u64x8;
+    let mut x0F0F30C0: u64x8;
+    let mut x3B92A366: u64x8;
+    let mut x30908326: u64x8;
+    let mut x3C90B3D6: u64x8;
+    let mut x33CC33CC: u64x8;
+    let mut x0C0CFFFF: u64x8;
+    let mut x379E5C99: u64x8;
+    let mut x04124C11: u64x8;
+    let mut x56E9861E: u64x8;
+    let mut xA91679E1: u64x8;
+    let mut x9586CA37: u64x8;
+    let mut x8402C833: u64x8;
+    let mut x84C2C83F: u64x8;
+    let mut xB35C94A6: u64x8;
+    let mut x00: u64x8;
+    let mut x01: u64x8;
+    let mut x10: u64x8;
+    let mut x11: u64x8;
+    let mut x20: u64x8;
+    let mut x21: u64x8;
+    let mut x30: u64x8;
+    let mut x31: u64x8;
 
-    let mut out1: u64 = 0;
-    let mut out2: u64 = 0;
-    let mut out3: u64 = 0;
-    let mut out4: u64 = 0;
+    let mut out1: u64x8 = ZERO;
+    let mut out2: u64x8 = ZERO;
+    let mut out3: u64x8 = ZERO;
+    let mut out4: u64x8 = ZERO;
 
     x5A5A5A5A = a1 ^ a3;
     x0F0FF0F0 = a3 ^ a5;
@@ -404,60 +436,67 @@ pub fn s4(a1: u64, a2: u64, a3: u64, a4: u64, a5: u64, a6: u64) -> (u64, u64, u6
     (out1, out2, out3, out4)
 }
 
-pub fn s5(a1: u64, a2: u64, a3: u64, a4: u64, a5: u64, a6: u64) -> (u64, u64, u64, u64) {
-    let mut x77777777: u64;
-    let mut x77770000: u64;
-    let mut x22225555: u64;
-    let mut x11116666: u64;
-    let mut x1F1F6F6F: u64;
-    let mut x70700000: u64;
-    let mut x43433333: u64;
-    let mut x00430033: u64;
-    let mut x55557777: u64;
-    let mut x55167744: u64;
-    let mut x5A19784B: u64;
-    let mut x5A1987B4: u64;
-    let mut x7A3BD7F5: u64;
-    let mut x003B00F5: u64;
-    let mut x221955A0: u64;
-    let mut x05050707: u64;
-    let mut x271C52A7: u64;
-    let mut x2A2A82A0: u64;
-    let mut x6969B193: u64;
-    let mut x1FE06F90: u64;
-    let mut x16804E00: u64;
-    let mut xE97FB1FF: u64;
-    let mut x43403302: u64;
-    let mut x35CAED30: u64;
-    let mut x37DEFFB7: u64;
-    let mut x349ECCB5: u64;
-    let mut x0B01234A: u64;
-    let mut x101884B4: u64;
-    let mut x0FF8EB24: u64;
-    let mut x41413333: u64;
-    let mut x4FF9FB37: u64;
-    let mut x4FC2FBC2: u64;
-    let mut x22222222: u64;
-    let mut x16BCEE97: u64;
-    let mut x0F080B04: u64;
-    let mut x19B4E593: u64;
-    let mut x5C5C5C5C: u64;
-    let mut x4448184C: u64;
-    let mut x2DDABE71: u64;
-    let mut x6992A63D: u64;
-    let mut x00: u64;
-    let mut x01: u64;
-    let mut x10: u64;
-    let mut x11: u64;
-    let mut x20: u64;
-    let mut x21: u64;
-    let mut x30: u64;
-    let mut x31: u64;
+pub fn s5(
+    a1: u64x8,
+    a2: u64x8,
+    a3: u64x8,
+    a4: u64x8,
+    a5: u64x8,
+    a6: u64x8,
+) -> (u64x8, u64x8, u64x8, u64x8) {
+    let mut x77777777: u64x8;
+    let mut x77770000: u64x8;
+    let mut x22225555: u64x8;
+    let mut x11116666: u64x8;
+    let mut x1F1F6F6F: u64x8;
+    let mut x70700000: u64x8;
+    let mut x43433333: u64x8;
+    let mut x00430033: u64x8;
+    let mut x55557777: u64x8;
+    let mut x55167744: u64x8;
+    let mut x5A19784B: u64x8;
+    let mut x5A1987B4: u64x8;
+    let mut x7A3BD7F5: u64x8;
+    let mut x003B00F5: u64x8;
+    let mut x221955A0: u64x8;
+    let mut x05050707: u64x8;
+    let mut x271C52A7: u64x8;
+    let mut x2A2A82A0: u64x8;
+    let mut x6969B193: u64x8;
+    let mut x1FE06F90: u64x8;
+    let mut x16804E00: u64x8;
+    let mut xE97FB1FF: u64x8;
+    let mut x43403302: u64x8;
+    let mut x35CAED30: u64x8;
+    let mut x37DEFFB7: u64x8;
+    let mut x349ECCB5: u64x8;
+    let mut x0B01234A: u64x8;
+    let mut x101884B4: u64x8;
+    let mut x0FF8EB24: u64x8;
+    let mut x41413333: u64x8;
+    let mut x4FF9FB37: u64x8;
+    let mut x4FC2FBC2: u64x8;
+    let mut x22222222: u64x8;
+    let mut x16BCEE97: u64x8;
+    let mut x0F080B04: u64x8;
+    let mut x19B4E593: u64x8;
+    let mut x5C5C5C5C: u64x8;
+    let mut x4448184C: u64x8;
+    let mut x2DDABE71: u64x8;
+    let mut x6992A63D: u64x8;
+    let mut x00: u64x8;
+    let mut x01: u64x8;
+    let mut x10: u64x8;
+    let mut x11: u64x8;
+    let mut x20: u64x8;
+    let mut x21: u64x8;
+    let mut x30: u64x8;
+    let mut x31: u64x8;
 
-    let mut out1: u64 = 0;
-    let mut out2: u64 = 0;
-    let mut out3: u64 = 0;
-    let mut out4: u64 = 0;
+    let mut out1: u64x8 = ZERO;
+    let mut out2: u64x8 = ZERO;
+    let mut out3: u64x8 = ZERO;
+    let mut out4: u64x8 = ZERO;
 
     x77777777 = a1 | a3;
     x77770000 = x77777777 & !a6;
@@ -522,58 +561,65 @@ pub fn s5(a1: u64, a2: u64, a3: u64, a4: u64, a5: u64, a6: u64) -> (u64, u64, u6
     (out1, out2, out3, out4)
 }
 
-pub fn s6(a1: u64, a2: u64, a3: u64, a4: u64, a5: u64, a6: u64) -> (u64, u64, u64, u64) {
-    let mut x33CC33CC: u64;
-    let mut x3333FFFF: u64;
-    let mut x11115555: u64;
-    let mut x22DD6699: u64;
-    let mut x22DD9966: u64;
-    let mut x00220099: u64;
-    let mut x00551144: u64;
-    let mut x33662277: u64;
-    let mut x5A5A5A5A: u64;
-    let mut x7B7E7A7F: u64;
-    let mut x59A31CE6: u64;
-    let mut x09030C06: u64;
-    let mut x09030000: u64;
-    let mut x336622FF: u64;
-    let mut x3A6522FF: u64;
-    let mut x484D494C: u64;
-    let mut x0000B6B3: u64;
-    let mut x0F0FB9BC: u64;
-    let mut x00FC00F9: u64;
-    let mut x0FFFB9FD: u64;
-    let mut x5DF75DF7: u64;
-    let mut x116600F7: u64;
-    let mut x1E69B94B: u64;
-    let mut x1668B94B: u64;
-    let mut x7B7B7B7B: u64;
-    let mut x411E5984: u64;
-    let mut x1FFFFDFD: u64;
-    let mut x5EE1A479: u64;
-    let mut x3CB4DFD2: u64;
-    let mut x004B002D: u64;
-    let mut xB7B2B6B3: u64;
-    let mut xCCC9CDC8: u64;
-    let mut xCC82CDE5: u64;
-    let mut x0055EEBB: u64;
-    let mut x5A5AECE9: u64;
-    let mut x0050ECA9: u64;
-    let mut xC5CAC1CE: u64;
-    let mut xC59A2D67: u64;
-    let mut x00: u64;
-    let mut x01: u64;
-    let mut x10: u64;
-    let mut x11: u64;
-    let mut x20: u64;
-    let mut x21: u64;
-    let mut x30: u64;
-    let mut x31: u64;
+pub fn s6(
+    a1: u64x8,
+    a2: u64x8,
+    a3: u64x8,
+    a4: u64x8,
+    a5: u64x8,
+    a6: u64x8,
+) -> (u64x8, u64x8, u64x8, u64x8) {
+    let mut x33CC33CC: u64x8;
+    let mut x3333FFFF: u64x8;
+    let mut x11115555: u64x8;
+    let mut x22DD6699: u64x8;
+    let mut x22DD9966: u64x8;
+    let mut x00220099: u64x8;
+    let mut x00551144: u64x8;
+    let mut x33662277: u64x8;
+    let mut x5A5A5A5A: u64x8;
+    let mut x7B7E7A7F: u64x8;
+    let mut x59A31CE6: u64x8;
+    let mut x09030C06: u64x8;
+    let mut x09030000: u64x8;
+    let mut x336622FF: u64x8;
+    let mut x3A6522FF: u64x8;
+    let mut x484D494C: u64x8;
+    let mut x0000B6B3: u64x8;
+    let mut x0F0FB9BC: u64x8;
+    let mut x00FC00F9: u64x8;
+    let mut x0FFFB9FD: u64x8;
+    let mut x5DF75DF7: u64x8;
+    let mut x116600F7: u64x8;
+    let mut x1E69B94B: u64x8;
+    let mut x1668B94B: u64x8;
+    let mut x7B7B7B7B: u64x8;
+    let mut x411E5984: u64x8;
+    let mut x1FFFFDFD: u64x8;
+    let mut x5EE1A479: u64x8;
+    let mut x3CB4DFD2: u64x8;
+    let mut x004B002D: u64x8;
+    let mut xB7B2B6B3: u64x8;
+    let mut xCCC9CDC8: u64x8;
+    let mut xCC82CDE5: u64x8;
+    let mut x0055EEBB: u64x8;
+    let mut x5A5AECE9: u64x8;
+    let mut x0050ECA9: u64x8;
+    let mut xC5CAC1CE: u64x8;
+    let mut xC59A2D67: u64x8;
+    let mut x00: u64x8;
+    let mut x01: u64x8;
+    let mut x10: u64x8;
+    let mut x11: u64x8;
+    let mut x20: u64x8;
+    let mut x21: u64x8;
+    let mut x30: u64x8;
+    let mut x31: u64x8;
 
-    let mut out1: u64 = 0;
-    let mut out2: u64 = 0;
-    let mut out3: u64 = 0;
-    let mut out4: u64 = 0;
+    let mut out1: u64x8 = ZERO;
+    let mut out2: u64x8 = ZERO;
+    let mut out3: u64x8 = ZERO;
+    let mut out4: u64x8 = ZERO;
 
     x33CC33CC = a2 ^ a5;
 
@@ -637,58 +683,65 @@ pub fn s6(a1: u64, a2: u64, a3: u64, a4: u64, a5: u64, a6: u64) -> (u64, u64, u6
     (out1, out2, out3, out4)
 }
 
-pub fn s7(a1: u64, a2: u64, a3: u64, a4: u64, a5: u64, a6: u64) -> (u64, u64, u64, u64) {
-    let mut x0FF00FF0: u64;
-    let mut x3CC33CC3: u64;
-    let mut x00003CC3: u64;
-    let mut x0F000F00: u64;
-    let mut x5A555A55: u64;
-    let mut x00001841: u64;
-    let mut x00000F00: u64;
-    let mut x33333C33: u64;
-    let mut x7B777E77: u64;
-    let mut x0FF0F00F: u64;
-    let mut x74878E78: u64;
-    let mut x003C003C: u64;
-    let mut x5A7D5A7D: u64;
-    let mut x333300F0: u64;
-    let mut x694E5A8D: u64;
-    let mut x0FF0CCCC: u64;
-    let mut x000F0303: u64;
-    let mut x5A505854: u64;
-    let mut x33CC000F: u64;
-    let mut x699C585B: u64;
-    let mut x7F878F78: u64;
-    let mut x21101013: u64;
-    let mut x7F979F7B: u64;
-    let mut x30030CC0: u64;
-    let mut x4F9493BB: u64;
-    let mut x6F9CDBFB: u64;
-    let mut x0000DBFB: u64;
-    let mut x00005151: u64;
-    let mut x26DAC936: u64;
-    let mut x26DA9867: u64;
-    let mut x27DA9877: u64;
-    let mut x27DA438C: u64;
-    let mut x2625C9C9: u64;
-    let mut x27FFCBCD: u64;
-    let mut x27FF1036: u64;
-    let mut x27FF103E: u64;
-    let mut xB06B6C44: u64;
-    let mut x97947C7A: u64;
-    let mut x00: u64;
-    let mut x01: u64;
-    let mut x10: u64;
-    let mut x11: u64;
-    let mut x20: u64;
-    let mut x21: u64;
-    let mut x30: u64;
-    let mut x31: u64;
+pub fn s7(
+    a1: u64x8,
+    a2: u64x8,
+    a3: u64x8,
+    a4: u64x8,
+    a5: u64x8,
+    a6: u64x8,
+) -> (u64x8, u64x8, u64x8, u64x8) {
+    let mut x0FF00FF0: u64x8;
+    let mut x3CC33CC3: u64x8;
+    let mut x00003CC3: u64x8;
+    let mut x0F000F00: u64x8;
+    let mut x5A555A55: u64x8;
+    let mut x00001841: u64x8;
+    let mut x00000F00: u64x8;
+    let mut x33333C33: u64x8;
+    let mut x7B777E77: u64x8;
+    let mut x0FF0F00F: u64x8;
+    let mut x74878E78: u64x8;
+    let mut x003C003C: u64x8;
+    let mut x5A7D5A7D: u64x8;
+    let mut x333300F0: u64x8;
+    let mut x694E5A8D: u64x8;
+    let mut x0FF0CCCC: u64x8;
+    let mut x000F0303: u64x8;
+    let mut x5A505854: u64x8;
+    let mut x33CC000F: u64x8;
+    let mut x699C585B: u64x8;
+    let mut x7F878F78: u64x8;
+    let mut x21101013: u64x8;
+    let mut x7F979F7B: u64x8;
+    let mut x30030CC0: u64x8;
+    let mut x4F9493BB: u64x8;
+    let mut x6F9CDBFB: u64x8;
+    let mut x0000DBFB: u64x8;
+    let mut x00005151: u64x8;
+    let mut x26DAC936: u64x8;
+    let mut x26DA9867: u64x8;
+    let mut x27DA9877: u64x8;
+    let mut x27DA438C: u64x8;
+    let mut x2625C9C9: u64x8;
+    let mut x27FFCBCD: u64x8;
+    let mut x27FF1036: u64x8;
+    let mut x27FF103E: u64x8;
+    let mut xB06B6C44: u64x8;
+    let mut x97947C7A: u64x8;
+    let mut x00: u64x8;
+    let mut x01: u64x8;
+    let mut x10: u64x8;
+    let mut x11: u64x8;
+    let mut x20: u64x8;
+    let mut x21: u64x8;
+    let mut x30: u64x8;
+    let mut x31: u64x8;
 
-    let mut out1: u64 = 0;
-    let mut out2: u64 = 0;
-    let mut out3: u64 = 0;
-    let mut out4: u64 = 0;
+    let mut out1: u64x8 = ZERO;
+    let mut out2: u64x8 = ZERO;
+    let mut out3: u64x8 = ZERO;
+    let mut out4: u64x8 = ZERO;
 
     x0FF00FF0 = a4 ^ a5;
     x3CC33CC3 = a3 ^ x0FF00FF0;
@@ -751,53 +804,60 @@ pub fn s7(a1: u64, a2: u64, a3: u64, a4: u64, a5: u64, a6: u64) -> (u64, u64, u6
     (out1, out2, out3, out4)
 }
 
-pub fn s8(a1: u64, a2: u64, a3: u64, a4: u64, a5: u64, a6: u64) -> (u64, u64, u64, u64) {
-    let mut x0C0C0C0C: u64;
-    let mut x0000F0F0: u64;
-    let mut x00FFF00F: u64;
-    let mut x00555005: u64;
-    let mut x00515001: u64;
-    let mut x33000330: u64;
-    let mut x77555775: u64;
-    let mut x30303030: u64;
-    let mut x3030CFCF: u64;
-    let mut x30104745: u64;
-    let mut x30555745: u64;
-    let mut xFF000FF0: u64;
-    let mut xCF1048B5: u64;
-    let mut x080A080A: u64;
-    let mut xC71A40BF: u64;
-    let mut xCB164CB3: u64;
-    let mut x9E4319E6: u64;
-    let mut x000019E6: u64;
-    let mut xF429738C: u64;
-    let mut xF4296A6A: u64;
-    let mut xC729695A: u64;
-    let mut xC47C3D2F: u64;
-    let mut xF77F3F3F: u64;
-    let mut x9E43E619: u64;
-    let mut x693CD926: u64;
-    let mut xF719A695: u64;
-    let mut xF4FF73FF: u64;
-    let mut x03E6D56A: u64;
-    let mut x56B3803F: u64;
-    let mut xF700A600: u64;
-    let mut x61008000: u64;
-    let mut x03B7856B: u64;
-    let mut x62B7056B: u64;
-    let mut x00: u64;
-    let mut x01: u64;
-    let mut x10: u64;
-    let mut x11: u64;
-    let mut x20: u64;
-    let mut x21: u64;
-    let mut x30: u64;
-    let mut x31: u64;
+pub fn s8(
+    a1: u64x8,
+    a2: u64x8,
+    a3: u64x8,
+    a4: u64x8,
+    a5: u64x8,
+    a6: u64x8,
+) -> (u64x8, u64x8, u64x8, u64x8) {
+    let mut x0C0C0C0C: u64x8;
+    let mut x0000F0F0: u64x8;
+    let mut x00FFF00F: u64x8;
+    let mut x00555005: u64x8;
+    let mut x00515001: u64x8;
+    let mut x33000330: u64x8;
+    let mut x77555775: u64x8;
+    let mut x30303030: u64x8;
+    let mut x3030CFCF: u64x8;
+    let mut x30104745: u64x8;
+    let mut x30555745: u64x8;
+    let mut xFF000FF0: u64x8;
+    let mut xCF1048B5: u64x8;
+    let mut x080A080A: u64x8;
+    let mut xC71A40BF: u64x8;
+    let mut xCB164CB3: u64x8;
+    let mut x9E4319E6: u64x8;
+    let mut x000019E6: u64x8;
+    let mut xF429738C: u64x8;
+    let mut xF4296A6A: u64x8;
+    let mut xC729695A: u64x8;
+    let mut xC47C3D2F: u64x8;
+    let mut xF77F3F3F: u64x8;
+    let mut x9E43E619: u64x8;
+    let mut x693CD926: u64x8;
+    let mut xF719A695: u64x8;
+    let mut xF4FF73FF: u64x8;
+    let mut x03E6D56A: u64x8;
+    let mut x56B3803F: u64x8;
+    let mut xF700A600: u64x8;
+    let mut x61008000: u64x8;
+    let mut x03B7856B: u64x8;
+    let mut x62B7056B: u64x8;
+    let mut x00: u64x8;
+    let mut x01: u64x8;
+    let mut x10: u64x8;
+    let mut x11: u64x8;
+    let mut x20: u64x8;
+    let mut x21: u64x8;
+    let mut x30: u64x8;
+    let mut x31: u64x8;
 
-    let mut out1: u64 = 0;
-    let mut out2: u64 = 0;
-    let mut out3: u64 = 0;
-    let mut out4: u64 = 0;
+    let mut out1: u64x8 = ZERO;
+    let mut out2: u64x8 = ZERO;
+    let mut out3: u64x8 = ZERO;
+    let mut out4: u64x8 = ZERO;
 
     x0C0C0C0C = a3 & !a2;
     x0000F0F0 = a5 & !a3;
