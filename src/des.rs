@@ -111,6 +111,12 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_tmp() {
+        let ip = permute_bits_pc(&IP, 0x1122334455667788, 64);
+        println!("{:#066b}", ip);
+    }
+
+    #[test]
     fn test_create_subkeys_works() {
         let subkeys = create_subkeys(
             0b1111000011001100101010101111,
