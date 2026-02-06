@@ -1,4 +1,8 @@
-use std::time::{Duration, Instant};
+use std::{
+    sync::{Arc, Barrier},
+    thread,
+    time::{Duration, Instant},
+};
 
 struct BenchmarkResult {
     runs: u64,
@@ -20,6 +24,55 @@ where
     let result = BenchmarkResult { runs, duration };
     let hashes_per_second =
         (result.runs as f64 / result.duration.as_secs_f64()) * parallel_count as f64;
+    print_report(name, hashes_per_second);
+}
+
+pub fn benchmark_parallel<F>(
+    name: &str,
+    runs: u64,
+    warmup: u64,
+    parallel_count: u64,
+    thread_count: usize,
+    mut func: F,
+) where
+    F: FnMut() + Send + Clone + 'static,
+{
+    let barrier = Arc::new(Barrier::new(thread_count));
+    let mut handles = Vec::with_capacity(thread_count);
+
+    let start_time = Instant::now();
+
+    for _ in 0..thread_count {
+        let mut func_clone = func.clone();
+        let c_barrier = Arc::clone(&barrier);
+
+        handles.push(thread::spawn(move || {
+            // 1. Warmup phase
+            for _ in 0..warmup {
+                func_clone();
+            }
+
+            // 2. Synchronization
+            c_barrier.wait();
+
+            // 3. Actual Benchmark
+            for _ in 0..runs {
+                func_clone();
+            }
+        }));
+    }
+
+    for handle in handles {
+        handle.join().unwrap();
+    }
+
+    let duration = start_time.elapsed();
+
+    let result = BenchmarkResult { runs, duration };
+    let hashes_per_second = (result.runs as f64 / result.duration.as_secs_f64())
+        * parallel_count as f64
+        * thread_count as f64;
+
     print_report(name, hashes_per_second);
 }
 
