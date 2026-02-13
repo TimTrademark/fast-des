@@ -2,6 +2,16 @@
 name = "fast-des"
 version = "0.1.0"
 edition = "2024"
+authors = ["TimTrademark <https://github.com/TimTrademark>"]
+repository = "https://github.com/TimTrademark/fast-des"
+readme = "README.md"
+description = "This crate implements DES encryption and NetNTLMv1 hashing in bitsliced form. a 10x-100x improvement in speed can be achieved depending on hardware."
+license = "MIT OR Apache-2.0"
+keywords = ["bitslice", "DES", "NetNTLMv1"]
+exclude = [
+    ".github/*",
+    "chores/*"
+]
 
 [dependencies]
 bitsliced-op = "0.5.0"
