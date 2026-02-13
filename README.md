@@ -26,7 +26,7 @@ DES encryption:
 
 ```rust
 let k = 0x133457799BBCDFF1u64;
-//fill up array with 512 keys (groups of 64). for simplciity we fill the full array with the same key in this example.
+//fill up array with 512 keys (groups of 64). for simplcity we fill the full array with the same key in this example.
 let mut keys = [[k; 64]; 8];
 //encrypt with 512 keys at once
 let ciphertexts = bitsliced_des_simd(0x0123456789ABCDEF, &mut keys);
