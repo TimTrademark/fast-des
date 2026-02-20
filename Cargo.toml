@@ -1,6 +1,6 @@
 [package]
 name = "fast-des"
-version = "0.5.0"
+version = "0.5.1"
 edition = "2024"
 authors = ["TimTrademark <https://github.com/TimTrademark>"]
 repository = "https://github.com/TimTrademark/fast-des"
