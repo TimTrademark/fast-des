@@ -2,7 +2,7 @@ use std::{env, sync::Arc, thread};
 
 use fast_des::{
     benchmark::{benchmark, benchmark_parallel},
-    bitsliced_des_inline_simd, bitsliced_des_simd, des,
+    bitsliced_des_inline_simd, bitsliced_des_simd, bitsliced_netntlmv1_simd, des,
 };
 use wide::u64x8;
 
@@ -32,13 +32,34 @@ fn start_benchmark(benchmark_name: &str) {
                 bitsliced_des_simd(PLAINTEXT, &mut keys);
             });
         }
+        "fn" | "fast_netntlmv1" => {
+            let mut keys = [[0x133457799BBCDFF1u64; 64]; 8];
+
+            benchmark("fast_netntlmv1_simd", 100_000, 10000, 64 * 8, || {
+                bitsliced_netntlmv1_simd(PLAINTEXT, &mut keys);
+            });
+        }
         "fp" | "fast_parallel" | "fast_des_parallel" => {
             let keys = [[0x133457799BBCDFF1u64; 64]; 8];
             let shared_keys = Arc::new(keys);
-            benchmark_parallel("fast_des_simd", 100_000, 10000, 64 * 8, 16, move || {
+            benchmark_parallel("fast_des_simd_parallel", 100_000, 64 * 8, 32, move || {
                 let keys = Arc::clone(&shared_keys);
                 bitsliced_des_simd(PLAINTEXT, &keys);
             });
+        }
+        "fnp" | "fast_netntlmv1_parallel" => {
+            let keys = [[0x133457799BBCDFF1u64; 64]; 8];
+            let shared_keys = Arc::new(keys);
+            benchmark_parallel(
+                "fast_netntlmv1_simd_parallel",
+                100_000,
+                64 * 8,
+                32,
+                move || {
+                    let keys = Arc::clone(&shared_keys);
+                    bitsliced_netntlmv1_simd(PLAINTEXT, &keys);
+                },
+            );
         }
         "fi" | "fast_inline" | "fast_des_inline" => {
             let mut keys = [u64x8::splat(0x133457799BBCDFF1u64); 64];
