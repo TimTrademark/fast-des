@@ -30,7 +30,6 @@ where
 pub fn benchmark_parallel<F>(
     name: &str,
     runs: u64,
-    warmup: u64,
     parallel_count: u64,
     thread_count: usize,
     mut func: F,
@@ -47,15 +46,8 @@ pub fn benchmark_parallel<F>(
         let c_barrier = Arc::clone(&barrier);
 
         handles.push(thread::spawn(move || {
-            // 1. Warmup phase
-            for _ in 0..warmup {
-                func_clone();
-            }
-
-            // 2. Synchronization
             c_barrier.wait();
 
-            // 3. Actual Benchmark
             for _ in 0..runs {
                 func_clone();
             }

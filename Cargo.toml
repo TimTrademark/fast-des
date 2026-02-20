@@ -15,4 +15,5 @@ exclude = [
 
 [dependencies]
 bitsliced-op = "0.5.0"
+core_affinity = "0.8.3"
 wide = "1.1.1"

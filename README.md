@@ -8,11 +8,13 @@ This crate was made for the sole purpose of fast encryption on a single plaintex
 
 ## Benchmarks (Ryzen 9 7945HX Laptop CPU)
 
-| Type                                | Hashrate    |
-| ----------------------------------- | ----------- |
-| Normal DES                          | ~3.88MH/s   |
-| Bitsliced DES                       | ~44.64MH/s  |
-| Bitsliced DES Parallel (16 threads) | ~340.17MH/s |
+| Type                                      | Hashrate    |
+| ----------------------------------------- | ----------- |
+| Normal DES                                | ~3.88MH/s   |
+| Bitsliced DES                             | ~44.64MH/s  |
+| Bitsliced DES Parallel (32 threads)       | ~507.05MH/s |
+| Bitsliced NetNTLMv1                       | ~40.28MH/s  |
+| Bitsliced NetNTLMv1 Parallel (32 threads) | ~505.71MH/s |
 
 ## Further improvements
 
