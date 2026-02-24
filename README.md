@@ -1,6 +1,6 @@
 # fast-des 🚀
 
-This crate implements DES using a bitsliced implementation. I set out to teach myself both the inner workings of DES and [bitslicing](https://timtaubert.de/blog/2018/08/bitslicing-an-introduction/). The bitsliced implementation achieved a 10x in performance.
+This crate implements DES using a bitsliced implementation. I set out to teach myself both the inner workings of DES and [bitslicing](https://timtaubert.de/blog/2018/08/bitslicing-an-introduction/). The bitsliced implementation achieved more than a 100x in performance for 512 bit (AVX) registers.
 
 ## Features
 
@@ -11,10 +11,10 @@ This crate was made for the sole purpose of fast encryption on a single plaintex
 | Type                                      | Hashrate    |
 | ----------------------------------------- | ----------- |
 | Normal DES                                | ~3.88MH/s   |
-| Bitsliced DES                             | ~44.64MH/s  |
-| Bitsliced DES Parallel (32 threads)       | ~507.05MH/s |
-| Bitsliced NetNTLMv1                       | ~40.28MH/s  |
-| Bitsliced NetNTLMv1 Parallel (32 threads) | ~505.71MH/s |
+| Bitsliced DES (AVX)                       | ~747.21MH/s |
+| Bitsliced DES Parallel (AVX 32 threads)   | ~4.02GH/s   |
+| Bitsliced NetNTLMv1 (AVX)                 | ~675.48MH/s |
+| Bitsliced NetNTLMv1 Parallel (32 threads) | ~3.86GH/s   |
 
 ## Further improvements
 
