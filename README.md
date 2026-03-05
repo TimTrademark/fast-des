@@ -8,13 +8,13 @@ This crate was made for the sole purpose of fast encryption on a single plaintex
 
 ## Benchmarks (Ryzen 9 7945HX Laptop CPU)
 
-| Type                                      | Hashrate    |
-| ----------------------------------------- | ----------- |
-| Normal DES                                | ~3.88MH/s   |
-| Bitsliced DES (AVX)                       | ~747.21MH/s |
-| Bitsliced DES Parallel (AVX 32 threads)   | ~4.02GH/s   |
-| Bitsliced NetNTLMv1 (AVX)                 | ~675.48MH/s |
-| Bitsliced NetNTLMv1 Parallel (32 threads) | ~3.86GH/s   |
+| Type                                          | Hashrate    |
+| --------------------------------------------- | ----------- |
+| Normal DES                                    | ~3.88MH/s   |
+| Bitsliced DES (AVX)                           | ~747.21MH/s |
+| Bitsliced DES Parallel (AVX 32 threads)       | ~4.02GH/s   |
+| Bitsliced NetNTLMv1 (AVX)                     | ~675.48MH/s |
+| Bitsliced NetNTLMv1 Parallel (AVX 32 threads) | ~3.86GH/s   |
 
 ## Further improvements
 
@@ -47,4 +47,19 @@ let keys = [[k; 64]; 8];
 let ciphertexts = bitsliced_netntlmv1_simd(0x1122334455667788, &keys);
 assert_eq!(ciphertexts[0][0], 0x727B4E35F947129E);
 assert_eq!(ciphertexts[0][63], 0x727B4E35F947129E);
+```
+
+NetNTLMv1 hash AVX (this is the fastest but requires AVX support from your CPU)
+
+```rust
+//AVX usage requires unsafe blocks
+//beware, this may crash if your CPU does not support AVX
+unsafe {
+    let k = 0x8846F7EAEE8FB1u64;
+    let keys = [[k; 64]; 8];
+    //netntlmv1 hash with 512 keys at once using AVX
+    let ciphertexts = bitsliced_netntlmv1_simd_avx(&keys);
+    assert_eq!(ciphertexts[0][0], 0x727B4E35F947129E);
+    assert_eq!(ciphertexts[0][63], 0x727B4E35F947129E);
+}
 ```
