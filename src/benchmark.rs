@@ -14,11 +14,11 @@ where
     F: FnMut(),
 {
     for _ in 0..warmup {
-        func();
+        std::hint::black_box(func());
     }
     let start = Instant::now();
     for _ in 0..runs {
-        func();
+        std::hint::black_box(func());
     }
     let duration = start.elapsed();
     let result = BenchmarkResult { runs, duration };
