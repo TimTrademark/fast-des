@@ -49,7 +49,7 @@ assert_eq!(ciphertexts[0][0], 0x727B4E35F947129E);
 assert_eq!(ciphertexts[0][63], 0x727B4E35F947129E);
 ```
 
-NetNTLMv1 hash AVX (this is the fastest but requires AVX support from your CPU)
+NetNTLMv1 hash AVX (this is the fastest but requires AVX support from your CPU):
 
 ```rust
 //AVX usage requires unsafe blocks
