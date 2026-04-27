@@ -58,7 +58,7 @@ unsafe {
     let k = 0x8846F7EAEE8FB1u64;
     let keys = [[k; 64]; 8];
     //netntlmv1 hash with 512 keys at once using AVX
-    let ciphertexts = bitsliced_netntlmv1_simd_avx(&keys);
+    let ciphertexts = bitsliced_netntlmv1_simd_avx_512(&keys);
     assert_eq!(ciphertexts[0][0], 0x727B4E35F947129E);
     assert_eq!(ciphertexts[0][63], 0x727B4E35F947129E);
 }

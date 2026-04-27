@@ -2,7 +2,8 @@ use bitsliced_op::{ALL_ONES, transpose_64x64};
 use core::arch::x86_64::__m512i;
 use std::{
     arch::x86_64::{
-        _mm512_set_epi64, _mm512_set1_epi64, _mm512_setzero_si512, _mm512_storeu_si512,
+        __m256i, _mm256_set_epi64x, _mm256_set1_epi64x, _mm256_storeu_si256, _mm512_set_epi64,
+        _mm512_set1_epi64, _mm512_setzero_si512, _mm512_storeu_si512,
     },
     mem::transmute,
 };
@@ -12,8 +13,8 @@ use crate::{
     constants::IP_INVO,
     des::{compute_pc1, create_subkeys, encrypt},
     des_optimized::{
-        compute_pc1_optimized, create_subkeys_optimized, encrypt_optimized, encrypt_simd,
-        encrypt_simd_avx, feistel_function_avx,
+        compute_pc1_optimized, create_subkeys_optimized, encrypt_avx_2, encrypt_avx_512,
+        encrypt_optimized, encrypt_simd, feistel_avx_512,
     },
 };
 
@@ -21,8 +22,7 @@ pub mod benchmark;
 mod constants;
 pub mod des;
 pub mod des_optimized;
-pub mod sbox_optimized;
-pub mod sbox_simd;
+pub mod sboxes;
 mod utils;
 
 pub const ZERO: u64x8 = u64x8::ZERO;
@@ -34,6 +34,7 @@ pub fn des(plaintext: u64, key: u64) -> u64 {
     encrypted
 }
 
+//SIMD
 pub fn bitsliced_des_simd(plaintext: u64, keys: &[[u64; 64]; 8]) -> [[u64; 64]; 8] {
     let mut k_slice = transpose(keys);
 
@@ -62,41 +63,67 @@ pub fn bitsliced_netntlmv1_inline_simd(plaintext: u64, keys: &mut [u64x8; 64]) {
     bitsliced_des_inline_simd(plaintext, keys);
 }
 
+//AVX512
 #[target_feature(enable = "avx512f,avx512vl,avx512bw")]
-pub unsafe fn bitsliced_des_simd_avx(keys: &[[u64; 64]; 8]) -> [[u64; 64]; 8] {
+pub unsafe fn bitsliced_des_simd_avx_512(keys: &[[u64; 64]; 8]) -> [[u64; 64]; 8] {
     unsafe {
-        let mut k_slice = transpose_avx(keys);
-        encrypt_simd_avx(&mut k_slice);
-        transpose_back_avx(&k_slice)
+        let mut k_slice = transpose_avx_512(keys);
+        encrypt_avx_512(&mut k_slice);
+        transpose_back_avx_512(&k_slice)
     }
 }
 
 #[target_feature(enable = "avx512f,avx512vl,avx512bw")]
-pub unsafe fn bitsliced_des_inline_simd_avx(keys: &mut [__m512i; 64]) {
-    encrypt_simd_avx(keys);
+pub unsafe fn bitsliced_des_inline_simd_avx_512(keys: &mut [__m512i; 64]) {
+    encrypt_avx_512(keys);
 }
 
 #[target_feature(enable = "avx512f,avx512vl,avx512bw")]
-pub unsafe fn bitsliced_netntlmv1_inline_simd_avx(keys: &mut [__m512i; 64]) {
+pub unsafe fn bitsliced_netntlmv1_inline_simd_avx_512(keys: &mut [__m512i; 64]) {
     *keys = convert_to_key::<__m512i>(&keys, _mm512_set1_epi64(-1i64));
-    bitsliced_des_inline_simd_avx(keys);
+    bitsliced_des_inline_simd_avx_512(keys);
 }
 
 #[target_feature(enable = "avx512f,avx512vl,avx512bw")]
-pub unsafe fn bitsliced_netntlmv1_simd_avx(keys: &[[u64; 64]; 8]) -> [[u64; 64]; 8] {
+pub unsafe fn bitsliced_netntlmv1_simd_avx_512(keys: &[[u64; 64]; 8]) -> [[u64; 64]; 8] {
     unsafe {
-        let k_slice = transpose_avx(keys);
+        let k_slice = transpose_avx_512(keys);
         let mut converted = convert_to_key::<__m512i>(&k_slice, _mm512_set1_epi64(-1i64));
-        encrypt_simd_avx(&mut converted);
-        transpose_back_avx(&converted)
+        encrypt_avx_512(&mut converted);
+        transpose_back_avx_512(&converted)
     }
 }
 
-const DES_KEY_PERM: [i8; 64] = [
-    0, 1, 2, 3, 4, 5, 6, -1, 7, 8, 9, 10, 11, 12, 13, -1, 14, 15, 16, 17, 18, 19, 20, -1, 21, 22,
-    23, 24, 25, 26, 27, -1, 28, 29, 30, 31, 32, 33, 34, -1, 35, 36, 37, 38, 39, 40, 41, -1, 42, 43,
-    44, 45, 46, 47, 48, -1, 49, 50, 51, 52, 53, 54, 55, -1,
-];
+//AVX2
+#[target_feature(enable = "avx2")]
+pub unsafe fn bitsliced_des_simd_avx_2(keys: &[[u64; 64]; 4]) -> [[u64; 64]; 4] {
+    unsafe {
+        let mut k_slice = transpose_avx_2(keys);
+        encrypt_avx_2(&mut k_slice);
+        transpose_back_avx_2(&k_slice)
+    }
+}
+
+#[target_feature(enable = "avx2")]
+pub unsafe fn bitsliced_des_inline_simd_avx_2(keys: &mut [__m256i; 64]) {
+    encrypt_avx_2(keys);
+}
+
+#[target_feature(enable = "avx2")]
+pub unsafe fn bitsliced_netntlmv1_simd_avx_2(keys: &[[u64; 64]; 4]) -> [[u64; 64]; 4] {
+    unsafe {
+        let k_slice = transpose_avx_2(keys);
+        let mut converted = convert_to_key::<__m256i>(&k_slice, _mm256_set1_epi64x(-1i64));
+        encrypt_avx_2(&mut converted);
+        transpose_back_avx_2(&converted)
+    }
+}
+
+#[target_feature(enable = "avx2")]
+pub unsafe fn bitsliced_netntlmv1_inline_simd_avx_2(keys: &mut [__m256i; 64]) {
+    *keys = convert_to_key::<__m256i>(&keys, _mm256_set1_epi64x(-1i64));
+    bitsliced_des_inline_simd_avx_2(keys);
+}
 
 //verbose for better performance
 fn convert_to_key<T: Copy>(plaintexts: &[T; 64], all_ones: T) -> [T; 64] {
@@ -169,8 +196,8 @@ fn convert_to_key<T: Copy>(plaintexts: &[T; 64], all_ones: T) -> [T; 64] {
 }
 
 //TODO: optimize AVX transpose
-unsafe fn transpose_avx(blocks: &[[u64; 64]; 8]) -> [__m512i; 64] {
-    let mut outputs = [_mm512_setzero_si512(); 64];
+unsafe fn transpose_avx_512(blocks: &[[u64; 64]; 8]) -> [__m512i; 64] {
+    let mut outputs = [transmute([0u64; 8]); 64];
     let mut blocks_transposed = [[0u64; 64]; 8];
 
     // 1. Transpose each block individually using your existing function
@@ -193,7 +220,7 @@ unsafe fn transpose_avx(blocks: &[[u64; 64]; 8]) -> [__m512i; 64] {
     outputs
 }
 
-unsafe fn transpose_back_avx(outputs_simd: &[__m512i; 64]) -> [[u64; 64]; 8] {
+unsafe fn transpose_back_avx_512(outputs_simd: &[__m512i; 64]) -> [[u64; 64]; 8] {
     let mut blocks_transposed = [[0u64; 64]; 8];
     let mut final_blocks = [[0u64; 64]; 8];
 
@@ -215,6 +242,55 @@ unsafe fn transpose_back_avx(outputs_simd: &[__m512i; 64]) -> [[u64; 64]; 8] {
 
     // 2. Transpose each block one last time to return to original row-major format
     for b in 0..8 {
+        final_blocks[b] = bitsliced_op::transpose_64x64(&blocks_transposed[b]);
+    }
+
+    final_blocks
+}
+
+//TODO: optimize AVX transpose
+unsafe fn transpose_avx_2(blocks: &[[u64; 64]; 4]) -> [__m256i; 64] {
+    let mut outputs = [transmute([0u64; 4]); 64];
+    let mut blocks_transposed = [[0u64; 64]; 4];
+
+    // 1. Transpose each block individually using your existing function
+    for b in 0..4 {
+        blocks_transposed[b] = bitsliced_op::transpose_64x64(&blocks[b]);
+    }
+    for bit_idx in 0..64 {
+        outputs[bit_idx] = _mm256_set_epi64x(
+            blocks_transposed[3][bit_idx] as i64,
+            blocks_transposed[2][bit_idx] as i64,
+            blocks_transposed[1][bit_idx] as i64,
+            blocks_transposed[0][bit_idx] as i64,
+        );
+    }
+
+    outputs
+}
+
+unsafe fn transpose_back_avx_2(outputs_simd: &[__m256i; 64]) -> [[u64; 64]; 4] {
+    let mut blocks_transposed = [[0u64; 64]; 4];
+    let mut final_blocks = [[0u64; 64]; 4];
+
+    // 1. Extract the lanes back into 8 intermediate blocks
+    // Each register contains Bit i for all 8 blocks.
+    for bit_idx in 0..64 {
+        let reg = outputs_simd[bit_idx];
+
+        // Use store to get the data out of the SIMD register into a temporary buffer
+        let mut lanes = [0u64; 4];
+        _mm256_storeu_si256(lanes.as_mut_ptr() as *mut _, reg);
+
+        // Map lanes back to their respective blocks
+        // Note: set_epi64(7, 6, 5, 4, 3, 2, 1, 0) stores as [0, 1, 2, 3, 4, 5, 6, 7] in memory
+        for b in 0..4 {
+            blocks_transposed[b][bit_idx] = lanes[b];
+        }
+    }
+
+    // 2. Transpose each block one last time to return to original row-major format
+    for b in 0..4 {
         final_blocks[b] = bitsliced_op::transpose_64x64(&blocks_transposed[b]);
     }
 
@@ -294,7 +370,7 @@ mod tests {
     }
 
     #[test]
-    fn test_encrypt_optimized_inline_avx_works_correctly() {
+    fn test_encrypt_optimized_inline_avx_512_works_correctly() {
         unsafe {
             let k = 0x8923BDFDAF753F63u64;
             let keys = [k; 64];
@@ -305,7 +381,7 @@ mod tests {
                     keys[i] = _mm512_set1_epi64(-1);
                 }
             }
-            bitsliced_des_inline_simd_avx(&mut keys);
+            bitsliced_des_inline_simd_avx_512(&mut keys);
             let mut output = Box::new([0u64; 64]);
             for (i, k) in keys.iter().enumerate() {
                 let lanes: [u64; 8] = transmute(*k);
@@ -319,12 +395,12 @@ mod tests {
     }
 
     #[test]
-    fn test_encrypt_optimized_avx_works_correctly() {
+    fn test_encrypt_optimized_avx_512_works_correctly() {
         unsafe {
             let k = 0x8923BDFDAF753F63u64;
             let keys = [[k; 64]; 8];
 
-            let output = bitsliced_des_simd_avx(&keys);
+            let output = bitsliced_des_simd_avx_512(&keys);
             assert_eq!(output[0][0], 0x727B4E35F947129E);
             assert_eq!(output[7][63], 0x727B4E35F947129E);
         }
@@ -351,26 +427,39 @@ mod tests {
     }
 
     #[test]
-    fn test_netntlmv1_encrypt_avx_works_correctly() {
+    fn test_netntlmv1_encrypt_avx_512_works_correctly() {
         unsafe {
             let k = 0x8846F7EAEE8FB1u64;
             let keys = [[k; 64]; 8];
-            let ciphertexts = bitsliced_netntlmv1_simd_avx(&keys);
+            let ciphertexts = bitsliced_netntlmv1_simd_avx_512(&keys);
             assert_eq!(ciphertexts[0][0], 0x727B4E35F947129E);
             assert_eq!(ciphertexts[0][63], 0x727B4E35F947129E);
         }
     }
 
     #[test]
-    fn test_netntlmv1_inline_encrypt_avx_works_correctly() {
+    fn test_netntlmv1_inline_encrypt_avx_512_works_correctly() {
         unsafe {
             let k = 0x8846F7EAEE8FB1u64;
             let keys = [[k; 64]; 8];
-            let mut transposed = transpose_avx(&keys);
-            bitsliced_netntlmv1_inline_simd_avx(&mut transposed);
-            let ciphertexts = transpose_back_avx(&transposed);
+            let mut transposed = transpose_avx_512(&keys);
+            bitsliced_netntlmv1_inline_simd_avx_512(&mut transposed);
+            let ciphertexts = transpose_back_avx_512(&transposed);
             assert_eq!(ciphertexts[0][0], 0x727B4E35F947129E);
             assert_eq!(ciphertexts[7][63], 0x727B4E35F947129E);
+        }
+    }
+
+    #[test]
+    fn test_netntlmv1_inline_encrypt_avx_2_works_correctly() {
+        unsafe {
+            let k = 0x8846F7EAEE8FB1u64;
+            let keys = [[k; 64]; 4];
+            let mut transposed = transpose_avx_2(&keys);
+            bitsliced_netntlmv1_inline_simd_avx_2(&mut transposed);
+            let ciphertexts = transpose_back_avx_2(&transposed);
+            assert_eq!(ciphertexts[0][0], 0x727B4E35F947129E);
+            assert_eq!(ciphertexts[3][63], 0x727B4E35F947129E);
         }
     }
 }

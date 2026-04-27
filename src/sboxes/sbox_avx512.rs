@@ -1,6 +1,6 @@
 use std::arch::x86_64::{
     __m512i, _mm512_and_si512, _mm512_andnot_si512, _mm512_or_si512, _mm512_set1_epi64,
-    _mm512_setzero_si512, _mm512_xor_si512,
+    _mm512_xor_si512,
 };
 
 #[inline(always)]
@@ -9,7 +9,7 @@ unsafe fn and_not(not_this: __m512i, and_this: __m512i) -> __m512i {
 }
 
 #[inline(always)]
-pub unsafe fn s1_avx(
+pub unsafe fn s1_avx_512(
     a1: __m512i,
     a2: __m512i,
     a3: __m512i,
@@ -75,7 +75,7 @@ pub unsafe fn s1_avx(
 }
 
 #[inline(always)]
-pub unsafe fn s2_avx(
+pub unsafe fn s2_avx_512(
     a1: __m512i,
     a2: __m512i,
     a3: __m512i,
@@ -134,7 +134,7 @@ pub unsafe fn s2_avx(
 }
 
 #[inline(always)]
-pub unsafe fn s3_avx(
+pub unsafe fn s3_avx_512(
     a1: __m512i,
     a2: __m512i,
     a3: __m512i,
@@ -202,7 +202,7 @@ pub unsafe fn s3_avx(
 }
 
 #[inline(always)]
-pub unsafe fn s4_avx(
+pub unsafe fn s4_avx_512(
     a1: __m512i,
     a2: __m512i,
     a3: __m512i,
@@ -256,7 +256,7 @@ pub unsafe fn s4_avx(
 }
 
 #[inline(always)]
-pub unsafe fn s5_avx(
+pub unsafe fn s5_avx_512(
     a1: __m512i,
     a2: __m512i,
     a3: __m512i,
@@ -326,7 +326,7 @@ pub unsafe fn s5_avx(
 }
 
 #[inline(always)]
-pub unsafe fn s6_avx(
+pub unsafe fn s6_avx_512(
     a1: __m512i,
     a2: __m512i,
     a3: __m512i,
@@ -394,7 +394,7 @@ pub unsafe fn s6_avx(
 }
 
 #[inline(always)]
-pub unsafe fn s7_avx(
+pub unsafe fn s7_avx_512(
     a1: __m512i,
     a2: __m512i,
     a3: __m512i,
@@ -462,7 +462,7 @@ pub unsafe fn s7_avx(
 }
 
 #[inline(always)]
-pub unsafe fn s8_avx(
+pub unsafe fn s8_avx_512(
     a1: __m512i,
     a2: __m512i,
     a3: __m512i,

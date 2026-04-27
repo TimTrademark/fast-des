@@ -1,5 +1,5 @@
 use std::{
-    arch::x86_64::{__m512i, _mm512_xor_si512},
+    arch::x86_64::{__m256i, __m512i, _mm256_xor_si256, _mm512_xor_si512},
     mem::transmute,
     ops::{BitAnd, BitOr, Shl, Shr},
 };
@@ -7,8 +7,16 @@ use std::{
 use crate::{
     ZERO,
     constants::{EO, IP, IP_INVO, PC_1O, PC_2O, PO},
-    sbox_optimized::{s1, s2, s3, s4, s5, s6, s7, s8},
-    sbox_simd::{s1_avx, s2_avx, s3_avx, s4_avx, s5_avx, s6_avx, s7_avx, s8_avx},
+    sboxes::{
+        sbox_avx2::{
+            s1_avx_2, s2_avx_2, s3_avx_2, s4_avx_2, s5_avx_2, s6_avx_2, s7_avx_2, s8_avx_2,
+        },
+        sbox_avx512::{
+            s1_avx_512, s2_avx_512, s3_avx_512, s4_avx_512, s5_avx_512, s6_avx_512, s7_avx_512,
+            s8_avx_512,
+        },
+        sbox_optimized::{s1, s2, s3, s4, s5, s6, s7, s8},
+    },
 };
 use bitsliced_op::transpose_64x64;
 use wide::u64x8;
@@ -486,7 +494,7 @@ const ALL_ONES_AVX: __m512i = unsafe { transmute([!0u64; 8]) };
 const ZERO_AVX: __m512i = unsafe { transmute([0u64; 8]) };
 
 #[inline(always)]
-pub fn encrypt_simd_avx(keys: &mut [__m512i; 64]) {
+pub fn encrypt_avx_512(keys: &mut [__m512i; 64]) {
     //assume pre calculated l and r for IP
     //TODO: round 0 can simply read from 2 registers (zero's or all ones), the rounds after need to work with l and r fully
     let mut l: [__m512i; 32] = [
@@ -559,87 +567,149 @@ pub fn encrypt_simd_avx(keys: &mut [__m512i; 64]) {
     ];
     // round 0
     unsafe {
-        feistel_function_avx(&mut l, &mut r, keys, 0);
+        feistel_avx_512(&mut l, &mut r, keys, 0);
     }
     // round 1
     unsafe {
-        feistel_function_avx(&mut r, &mut l, keys, 1);
+        feistel_avx_512(&mut r, &mut l, keys, 1);
     }
     // round 2
     unsafe {
-        feistel_function_avx(&mut l, &mut r, keys, 2);
+        feistel_avx_512(&mut l, &mut r, keys, 2);
     }
     // round 3
     unsafe {
-        feistel_function_avx(&mut r, &mut l, keys, 3);
+        feistel_avx_512(&mut r, &mut l, keys, 3);
     }
     // round 4
     unsafe {
-        feistel_function_avx(&mut l, &mut r, keys, 4);
+        feistel_avx_512(&mut l, &mut r, keys, 4);
     }
     // round 5
     unsafe {
-        feistel_function_avx(&mut r, &mut l, keys, 5);
+        feistel_avx_512(&mut r, &mut l, keys, 5);
     }
     // round 6
     unsafe {
-        feistel_function_avx(&mut l, &mut r, keys, 6);
+        feistel_avx_512(&mut l, &mut r, keys, 6);
     }
     // round 7
     unsafe {
-        feistel_function_avx(&mut r, &mut l, keys, 7);
+        feistel_avx_512(&mut r, &mut l, keys, 7);
     }
     // round 8
     unsafe {
-        feistel_function_avx(&mut l, &mut r, keys, 8);
+        feistel_avx_512(&mut l, &mut r, keys, 8);
     }
     // round 9
     unsafe {
-        feistel_function_avx(&mut r, &mut l, keys, 9);
+        feistel_avx_512(&mut r, &mut l, keys, 9);
     }
     // round 10
     unsafe {
-        feistel_function_avx(&mut l, &mut r, keys, 10);
+        feistel_avx_512(&mut l, &mut r, keys, 10);
     }
     // round 11
     unsafe {
-        feistel_function_avx(&mut r, &mut l, keys, 11);
+        feistel_avx_512(&mut r, &mut l, keys, 11);
     }
     // round 12
     unsafe {
-        feistel_function_avx(&mut l, &mut r, keys, 12);
+        feistel_avx_512(&mut l, &mut r, keys, 12);
     }
     // round 13
     unsafe {
-        feistel_function_avx(&mut r, &mut l, keys, 13);
+        feistel_avx_512(&mut r, &mut l, keys, 13);
     }
     // round 14
     unsafe {
-        feistel_function_avx(&mut l, &mut r, keys, 14);
+        feistel_avx_512(&mut l, &mut r, keys, 14);
     }
     // round 15
     unsafe {
-        feistel_function_avx(&mut r, &mut l, keys, 15);
+        feistel_avx_512(&mut r, &mut l, keys, 15);
     }
 
     //final permutation
-    let keys_ptr = keys.as_mut_ptr();
-    for i in 0..64 {
-        unsafe {
-            std::ptr::write(
-                keys_ptr.add(i),
-                if IP_INVO[i] < 32 {
-                    r[IP_INVO[i]]
-                } else {
-                    l[IP_INVO[i] - 32]
-                },
-            );
-        }
+    unsafe {
+        let out = keys.as_mut_ptr();
+
+        *out.add(0) = l[7];
+        *out.add(1) = r[7];
+        *out.add(2) = l[15];
+        *out.add(3) = r[15];
+        *out.add(4) = l[23];
+        *out.add(5) = r[23];
+        *out.add(6) = l[31];
+        *out.add(7) = r[31];
+
+        *out.add(8) = l[6];
+        *out.add(9) = r[6];
+        *out.add(10) = l[14];
+        *out.add(11) = r[14];
+        *out.add(12) = l[22];
+        *out.add(13) = r[22];
+        *out.add(14) = l[30];
+        *out.add(15) = r[30];
+
+        *out.add(16) = l[5];
+        *out.add(17) = r[5];
+        *out.add(18) = l[13];
+        *out.add(19) = r[13];
+        *out.add(20) = l[21];
+        *out.add(21) = r[21];
+        *out.add(22) = l[29];
+        *out.add(23) = r[29];
+
+        *out.add(24) = l[4];
+        *out.add(25) = r[4];
+        *out.add(26) = l[12];
+        *out.add(27) = r[12];
+        *out.add(28) = l[20];
+        *out.add(29) = r[20];
+        *out.add(30) = l[28];
+        *out.add(31) = r[28];
+
+        *out.add(32) = l[3];
+        *out.add(33) = r[3];
+        *out.add(34) = l[11];
+        *out.add(35) = r[11];
+        *out.add(36) = l[19];
+        *out.add(37) = r[19];
+        *out.add(38) = l[27];
+        *out.add(39) = r[27];
+
+        *out.add(40) = l[2];
+        *out.add(41) = r[2];
+        *out.add(42) = l[10];
+        *out.add(43) = r[10];
+        *out.add(44) = l[18];
+        *out.add(45) = r[18];
+        *out.add(46) = l[26];
+        *out.add(47) = r[26];
+
+        *out.add(48) = l[1];
+        *out.add(49) = r[1];
+        *out.add(50) = l[9];
+        *out.add(51) = r[9];
+        *out.add(52) = l[17];
+        *out.add(53) = r[17];
+        *out.add(54) = l[25];
+        *out.add(55) = r[25];
+
+        *out.add(56) = l[0];
+        *out.add(57) = r[0];
+        *out.add(58) = l[8];
+        *out.add(59) = r[8];
+        *out.add(60) = l[16];
+        *out.add(61) = r[16];
+        *out.add(62) = l[24];
+        *out.add(63) = r[24];
     }
 }
 
 #[inline(always)]
-pub unsafe fn feistel_function_avx(
+pub unsafe fn feistel_avx_512(
     l: &mut [__m512i; 32],
     r: &mut [__m512i; 32],
     keys: &[__m512i; 64],
@@ -681,7 +751,7 @@ pub unsafe fn feistel_function_avx(
         //s1 compute
         //use inner block to free o registers
         {
-            let (o0, o1, o2, o3) = s1_avx(e0, e1, e2, e3, e4, e5);
+            let (o0, o1, o2, o3) = s1_avx_512(e0, e1, e2, e3, e4, e5);
             l[8] = _mm512_xor_si512(l[8], o0);
             l[16] = _mm512_xor_si512(l[16], o1);
             l[22] = _mm512_xor_si512(l[22], o2);
@@ -690,7 +760,7 @@ pub unsafe fn feistel_function_avx(
 
         //s2 compute
         {
-            let (o0, o1, o2, o3) = s2_avx(f0, f1, f2, f3, f4, f5);
+            let (o0, o1, o2, o3) = s2_avx_512(f0, f1, f2, f3, f4, f5);
             l[12] = _mm512_xor_si512(l[12], o0);
             l[27] = _mm512_xor_si512(l[27], o1);
             l[1] = _mm512_xor_si512(l[1], o2);
@@ -699,7 +769,7 @@ pub unsafe fn feistel_function_avx(
 
         //s3 compute
         {
-            let (o0, o1, o2, o3) = s3_avx(g0, g1, g2, g3, g4, g5);
+            let (o0, o1, o2, o3) = s3_avx_512(g0, g1, g2, g3, g4, g5);
             l[23] = _mm512_xor_si512(l[23], o0);
             l[15] = _mm512_xor_si512(l[15], o1);
             l[29] = _mm512_xor_si512(l[29], o2);
@@ -708,7 +778,7 @@ pub unsafe fn feistel_function_avx(
 
         //s4 compute
         {
-            let (o0, o1, o2, o3) = s4_avx(h0, h1, h2, h3, h4, h5);
+            let (o0, o1, o2, o3) = s4_avx_512(h0, h1, h2, h3, h4, h5);
             l[25] = _mm512_xor_si512(l[25], o0);
             l[19] = _mm512_xor_si512(l[19], o1);
             l[9] = _mm512_xor_si512(l[9], o2);
@@ -749,7 +819,7 @@ pub unsafe fn feistel_function_avx(
 
         //s5 compute
         {
-            let (o0, o1, o2, o3) = s5_avx(e0, e1, e2, e3, e4, e5);
+            let (o0, o1, o2, o3) = s5_avx_512(e0, e1, e2, e3, e4, e5);
             l[7] = _mm512_xor_si512(l[7], o0);
             l[13] = _mm512_xor_si512(l[13], o1);
             l[24] = _mm512_xor_si512(l[24], o2);
@@ -758,7 +828,7 @@ pub unsafe fn feistel_function_avx(
 
         //s6 compute
         {
-            let (o0, o1, o2, o3) = s6_avx(f0, f1, f2, f3, f4, f5);
+            let (o0, o1, o2, o3) = s6_avx_512(f0, f1, f2, f3, f4, f5);
             l[3] = _mm512_xor_si512(l[3], o0);
             l[28] = _mm512_xor_si512(l[28], o1);
             l[10] = _mm512_xor_si512(l[10], o2);
@@ -767,7 +837,7 @@ pub unsafe fn feistel_function_avx(
 
         //s7 compute
         {
-            let (o0, o1, o2, o3) = s7_avx(g0, g1, g2, g3, g4, g5);
+            let (o0, o1, o2, o3) = s7_avx_512(g0, g1, g2, g3, g4, g5);
             l[31] = _mm512_xor_si512(l[31], o0);
             l[11] = _mm512_xor_si512(l[11], o1);
             l[21] = _mm512_xor_si512(l[21], o2);
@@ -776,7 +846,7 @@ pub unsafe fn feistel_function_avx(
 
         //s8 compute
         {
-            let (o0, o1, o2, o3) = s8_avx(h0, h1, h2, h3, h4, h5);
+            let (o0, o1, o2, o3) = s8_avx_512(h0, h1, h2, h3, h4, h5);
             l[4] = _mm512_xor_si512(l[4], o0);
             l[26] = _mm512_xor_si512(l[26], o1);
             l[14] = _mm512_xor_si512(l[14], o2);
@@ -785,131 +855,368 @@ pub unsafe fn feistel_function_avx(
     }
 }
 
+//AVX 2
+const ALL_ONES_AVX_2: __m256i = unsafe { transmute([!0u64; 4]) };
+const ZERO_AVX_2: __m256i = unsafe { transmute([0u64; 4]) };
+
 #[inline(always)]
-pub unsafe fn feistel_function_avx_(
-    l: &mut [__m512i; 32],
-    r: &mut [__m512i; 32],
-    keys: &[__m512i; 64],
+pub fn encrypt_avx_2(keys: &mut [__m256i; 64]) {
+    //assume pre calculated l and r for IP
+    //TODO: round 0 can simply read from 2 registers (zero's or all ones), the rounds after need to work with l and r fully
+    let mut l: [__m256i; 32] = [
+        ZERO_AVX_2,
+        ALL_ONES_AVX_2,
+        ALL_ONES_AVX_2,
+        ALL_ONES_AVX_2,
+        ALL_ONES_AVX_2,
+        ZERO_AVX_2,
+        ZERO_AVX_2,
+        ZERO_AVX_2,
+        ZERO_AVX_2,
+        ALL_ONES_AVX_2,
+        ZERO_AVX_2,
+        ALL_ONES_AVX_2,
+        ZERO_AVX_2,
+        ALL_ONES_AVX_2,
+        ZERO_AVX_2,
+        ALL_ONES_AVX_2,
+        ZERO_AVX_2,
+        ALL_ONES_AVX_2,
+        ALL_ONES_AVX_2,
+        ALL_ONES_AVX_2,
+        ALL_ONES_AVX_2,
+        ZERO_AVX_2,
+        ZERO_AVX_2,
+        ZERO_AVX_2,
+        ZERO_AVX_2,
+        ALL_ONES_AVX_2,
+        ZERO_AVX_2,
+        ALL_ONES_AVX_2,
+        ZERO_AVX_2,
+        ALL_ONES_AVX_2,
+        ZERO_AVX_2,
+        ALL_ONES_AVX_2,
+    ];
+    let mut r: [__m256i; 32] = [
+        ALL_ONES_AVX_2,
+        ZERO_AVX_2,
+        ZERO_AVX_2,
+        ZERO_AVX_2,
+        ZERO_AVX_2,
+        ZERO_AVX_2,
+        ZERO_AVX_2,
+        ZERO_AVX_2,
+        ZERO_AVX_2,
+        ALL_ONES_AVX_2,
+        ALL_ONES_AVX_2,
+        ZERO_AVX_2,
+        ZERO_AVX_2,
+        ALL_ONES_AVX_2,
+        ALL_ONES_AVX_2,
+        ZERO_AVX_2,
+        ALL_ONES_AVX_2,
+        ZERO_AVX_2,
+        ZERO_AVX_2,
+        ZERO_AVX_2,
+        ZERO_AVX_2,
+        ZERO_AVX_2,
+        ZERO_AVX_2,
+        ZERO_AVX_2,
+        ZERO_AVX_2,
+        ALL_ONES_AVX_2,
+        ALL_ONES_AVX_2,
+        ZERO_AVX_2,
+        ZERO_AVX_2,
+        ALL_ONES_AVX_2,
+        ALL_ONES_AVX_2,
+        ZERO_AVX_2,
+    ];
+    // round 0
+    unsafe {
+        feistel_avx_2(&mut l, &mut r, keys, 0);
+    }
+    // round 1
+    unsafe {
+        feistel_avx_2(&mut r, &mut l, keys, 1);
+    }
+    // round 2
+    unsafe {
+        feistel_avx_2(&mut l, &mut r, keys, 2);
+    }
+    // round 3
+    unsafe {
+        feistel_avx_2(&mut r, &mut l, keys, 3);
+    }
+    // round 4
+    unsafe {
+        feistel_avx_2(&mut l, &mut r, keys, 4);
+    }
+    // round 5
+    unsafe {
+        feistel_avx_2(&mut r, &mut l, keys, 5);
+    }
+    // round 6
+    unsafe {
+        feistel_avx_2(&mut l, &mut r, keys, 6);
+    }
+    // round 7
+    unsafe {
+        feistel_avx_2(&mut r, &mut l, keys, 7);
+    }
+    // round 8
+    unsafe {
+        feistel_avx_2(&mut l, &mut r, keys, 8);
+    }
+    // round 9
+    unsafe {
+        feistel_avx_2(&mut r, &mut l, keys, 9);
+    }
+    // round 10
+    unsafe {
+        feistel_avx_2(&mut l, &mut r, keys, 10);
+    }
+    // round 11
+    unsafe {
+        feistel_avx_2(&mut r, &mut l, keys, 11);
+    }
+    // round 12
+    unsafe {
+        feistel_avx_2(&mut l, &mut r, keys, 12);
+    }
+    // round 13
+    unsafe {
+        feistel_avx_2(&mut r, &mut l, keys, 13);
+    }
+    // round 14
+    unsafe {
+        feistel_avx_2(&mut l, &mut r, keys, 14);
+    }
+    // round 15
+    unsafe {
+        feistel_avx_2(&mut r, &mut l, keys, 15);
+    }
+
+    //final permutation
+    unsafe {
+        let out = keys.as_mut_ptr();
+
+        *out.add(0) = l[7];
+        *out.add(1) = r[7];
+        *out.add(2) = l[15];
+        *out.add(3) = r[15];
+        *out.add(4) = l[23];
+        *out.add(5) = r[23];
+        *out.add(6) = l[31];
+        *out.add(7) = r[31];
+
+        *out.add(8) = l[6];
+        *out.add(9) = r[6];
+        *out.add(10) = l[14];
+        *out.add(11) = r[14];
+        *out.add(12) = l[22];
+        *out.add(13) = r[22];
+        *out.add(14) = l[30];
+        *out.add(15) = r[30];
+
+        *out.add(16) = l[5];
+        *out.add(17) = r[5];
+        *out.add(18) = l[13];
+        *out.add(19) = r[13];
+        *out.add(20) = l[21];
+        *out.add(21) = r[21];
+        *out.add(22) = l[29];
+        *out.add(23) = r[29];
+
+        *out.add(24) = l[4];
+        *out.add(25) = r[4];
+        *out.add(26) = l[12];
+        *out.add(27) = r[12];
+        *out.add(28) = l[20];
+        *out.add(29) = r[20];
+        *out.add(30) = l[28];
+        *out.add(31) = r[28];
+
+        *out.add(32) = l[3];
+        *out.add(33) = r[3];
+        *out.add(34) = l[11];
+        *out.add(35) = r[11];
+        *out.add(36) = l[19];
+        *out.add(37) = r[19];
+        *out.add(38) = l[27];
+        *out.add(39) = r[27];
+
+        *out.add(40) = l[2];
+        *out.add(41) = r[2];
+        *out.add(42) = l[10];
+        *out.add(43) = r[10];
+        *out.add(44) = l[18];
+        *out.add(45) = r[18];
+        *out.add(46) = l[26];
+        *out.add(47) = r[26];
+
+        *out.add(48) = l[1];
+        *out.add(49) = r[1];
+        *out.add(50) = l[9];
+        *out.add(51) = r[9];
+        *out.add(52) = l[17];
+        *out.add(53) = r[17];
+        *out.add(54) = l[25];
+        *out.add(55) = r[25];
+
+        *out.add(56) = l[0];
+        *out.add(57) = r[0];
+        *out.add(58) = l[8];
+        *out.add(59) = r[8];
+        *out.add(60) = l[16];
+        *out.add(61) = r[16];
+        *out.add(62) = l[24];
+        *out.add(63) = r[24];
+    }
+}
+
+#[inline(always)]
+pub unsafe fn feistel_avx_2(
+    l: &mut [__m256i; 32],
+    r: &mut [__m256i; 32],
+    keys: &[__m256i; 64],
+    round: usize,
 ) {
     unsafe {
-        // ---- S1 + S2 ---- reuse e0..e5 and f0..f5 ----
-        let mut e0 = _mm512_xor_si512(r[31], keys[13]);
-        let mut e1 = _mm512_xor_si512(r[0], keys[16]);
-        let mut e2 = _mm512_xor_si512(r[1], keys[10]);
-        let mut e3 = _mm512_xor_si512(r[2], keys[23]);
-        let mut e4 = _mm512_xor_si512(r[3], keys[0]);
-        let mut e5 = _mm512_xor_si512(r[4], keys[4]);
+        //s1 expand
+        let mut e0 = _mm256_xor_si256(r[31], keys[SUBKEY_SCHEDULE[round][0]]);
+        let mut e1 = _mm256_xor_si256(r[0], keys[SUBKEY_SCHEDULE[round][1]]);
+        let mut e2 = _mm256_xor_si256(r[1], keys[SUBKEY_SCHEDULE[round][2]]);
+        let mut e3 = _mm256_xor_si256(r[2], keys[SUBKEY_SCHEDULE[round][3]]);
+        let mut e4 = _mm256_xor_si256(r[3], keys[SUBKEY_SCHEDULE[round][4]]);
+        let mut e5 = _mm256_xor_si256(r[4], keys[SUBKEY_SCHEDULE[round][5]]);
 
-        let mut f0 = _mm512_xor_si512(r[3], keys[2]);
-        let mut f1 = _mm512_xor_si512(r[4], keys[27]);
-        let mut f2 = _mm512_xor_si512(r[5], keys[14]);
-        let mut f3 = _mm512_xor_si512(r[6], keys[5]);
-        let mut f4 = _mm512_xor_si512(r[7], keys[20]);
-        let mut f5 = _mm512_xor_si512(r[8], keys[9]);
+        //s2 expand
+        let mut f0 = _mm256_xor_si256(r[3], keys[SUBKEY_SCHEDULE[round][6]]);
+        let mut f1 = _mm256_xor_si256(r[4], keys[SUBKEY_SCHEDULE[round][7]]);
+        let mut f2 = _mm256_xor_si256(r[5], keys[SUBKEY_SCHEDULE[round][8]]);
+        let mut f3 = _mm256_xor_si256(r[6], keys[SUBKEY_SCHEDULE[round][9]]);
+        let mut f4 = _mm256_xor_si256(r[7], keys[SUBKEY_SCHEDULE[round][10]]);
+        let mut f5 = _mm256_xor_si256(r[8], keys[SUBKEY_SCHEDULE[round][11]]);
 
+        //s3 expand
+        let mut g0 = _mm256_xor_si256(r[7], keys[SUBKEY_SCHEDULE[round][12]]);
+        let mut g1 = _mm256_xor_si256(r[8], keys[SUBKEY_SCHEDULE[round][13]]);
+        let mut g2 = _mm256_xor_si256(r[9], keys[SUBKEY_SCHEDULE[round][14]]);
+        let mut g3 = _mm256_xor_si256(r[10], keys[SUBKEY_SCHEDULE[round][15]]);
+        let mut g4 = _mm256_xor_si256(r[11], keys[SUBKEY_SCHEDULE[round][16]]);
+        let mut g5 = _mm256_xor_si256(r[12], keys[SUBKEY_SCHEDULE[round][17]]);
+
+        //s4 expand
+        let mut h0 = _mm256_xor_si256(r[11], keys[SUBKEY_SCHEDULE[round][18]]);
+        let mut h1 = _mm256_xor_si256(r[12], keys[SUBKEY_SCHEDULE[round][19]]);
+        let mut h2 = _mm256_xor_si256(r[13], keys[SUBKEY_SCHEDULE[round][20]]);
+        let mut h3 = _mm256_xor_si256(r[14], keys[SUBKEY_SCHEDULE[round][21]]);
+        let mut h4 = _mm256_xor_si256(r[15], keys[SUBKEY_SCHEDULE[round][22]]);
+        let mut h5 = _mm256_xor_si256(r[16], keys[SUBKEY_SCHEDULE[round][23]]);
+
+        //s1 compute
+        //use inner block to free o registers
         {
-            let (o0, o1, o2, o3) = s1_avx(e0, e1, e2, e3, e4, e5);
-            let (p0, p1, p2, p3) = s2_avx(f0, f1, f2, f3, f4, f5);
-
-            l[8] = _mm512_xor_si512(l[8], o0);
-            l[16] = _mm512_xor_si512(l[16], o1);
-            l[22] = _mm512_xor_si512(l[22], o2);
-            l[30] = _mm512_xor_si512(l[30], o3);
-
-            l[12] = _mm512_xor_si512(l[12], p0);
-            l[27] = _mm512_xor_si512(l[27], p1);
-            l[1] = _mm512_xor_si512(l[1], p2);
-            l[17] = _mm512_xor_si512(l[17], p3);
+            let (o0, o1, o2, o3) = s1_avx_2(e0, e1, e2, e3, e4, e5);
+            l[8] = _mm256_xor_si256(l[8], o0);
+            l[16] = _mm256_xor_si256(l[16], o1);
+            l[22] = _mm256_xor_si256(l[22], o2);
+            l[30] = _mm256_xor_si256(l[30], o3);
         }
 
-        // ---- S3 + S4 ---- reuse e0..e5 and f0..f5 ----
-        e0 = _mm512_xor_si512(r[7], keys[22]);
-        e1 = _mm512_xor_si512(r[8], keys[18]);
-        e2 = _mm512_xor_si512(r[9], keys[11]);
-        e3 = _mm512_xor_si512(r[10], keys[3]);
-        e4 = _mm512_xor_si512(r[11], keys[25]);
-        e5 = _mm512_xor_si512(r[12], keys[7]);
-
-        f0 = _mm512_xor_si512(r[11], keys[15]);
-        f1 = _mm512_xor_si512(r[12], keys[6]);
-        f2 = _mm512_xor_si512(r[13], keys[26]);
-        f3 = _mm512_xor_si512(r[14], keys[19]);
-        f4 = _mm512_xor_si512(r[15], keys[12]);
-        f5 = _mm512_xor_si512(r[16], keys[1]);
-
+        //s2 compute
         {
-            let (o0, o1, o2, o3) = s3_avx(e0, e1, e2, e3, e4, e5);
-            let (p0, p1, p2, p3) = s4_avx(f0, f1, f2, f3, f4, f5);
-
-            l[23] = _mm512_xor_si512(l[23], o0);
-            l[15] = _mm512_xor_si512(l[15], o1);
-            l[29] = _mm512_xor_si512(l[29], o2);
-            l[5] = _mm512_xor_si512(l[5], o3);
-
-            l[25] = _mm512_xor_si512(l[25], p0);
-            l[19] = _mm512_xor_si512(l[19], p1);
-            l[9] = _mm512_xor_si512(l[9], p2);
-            l[0] = _mm512_xor_si512(l[0], p3);
+            let (o0, o1, o2, o3) = s2_avx_2(f0, f1, f2, f3, f4, f5);
+            l[12] = _mm256_xor_si256(l[12], o0);
+            l[27] = _mm256_xor_si256(l[27], o1);
+            l[1] = _mm256_xor_si256(l[1], o2);
+            l[17] = _mm256_xor_si256(l[17], o3);
         }
 
-        // ---- S5 + S6 ---- reuse e0..e5 and f0..f5 ----
-        e0 = _mm512_xor_si512(r[15], keys[7]);
-        e1 = _mm512_xor_si512(r[16], keys[31]);
-        e2 = _mm512_xor_si512(r[17], keys[21]);
-        e3 = _mm512_xor_si512(r[18], keys[13]);
-        e4 = _mm512_xor_si512(r[19], keys[24]);
-        e5 = _mm512_xor_si512(r[20], keys[2]);
-
-        f0 = _mm512_xor_si512(r[19], keys[3]);
-        f1 = _mm512_xor_si512(r[20], keys[28]);
-        f2 = _mm512_xor_si512(r[21], keys[10]);
-        f3 = _mm512_xor_si512(r[22], keys[18]);
-        f4 = _mm512_xor_si512(r[23], keys[5]);
-        f5 = _mm512_xor_si512(r[24], keys[26]);
-
+        //s3 compute
         {
-            let (o0, o1, o2, o3) = s5_avx(e0, e1, e2, e3, e4, e5);
-            let (p0, p1, p2, p3) = s6_avx(f0, f1, f2, f3, f4, f5);
-
-            l[7] = _mm512_xor_si512(l[7], o0);
-            l[13] = _mm512_xor_si512(l[13], o1);
-            l[24] = _mm512_xor_si512(l[24], o2);
-            l[2] = _mm512_xor_si512(l[2], o3);
-
-            l[3] = _mm512_xor_si512(l[3], p0);
-            l[28] = _mm512_xor_si512(l[28], p1);
-            l[10] = _mm512_xor_si512(l[10], p2);
-            l[18] = _mm512_xor_si512(l[18], p3);
+            let (o0, o1, o2, o3) = s3_avx_2(g0, g1, g2, g3, g4, g5);
+            l[23] = _mm256_xor_si256(l[23], o0);
+            l[15] = _mm256_xor_si256(l[15], o1);
+            l[29] = _mm256_xor_si256(l[29], o2);
+            l[5] = _mm256_xor_si256(l[5], o3);
         }
 
-        // ---- S7 + S8 ---- reuse e0..e5 and f0..f5 ----
-        e0 = _mm512_xor_si512(r[23], keys[14]);
-        e1 = _mm512_xor_si512(r[24], keys[20]);
-        e2 = _mm512_xor_si512(r[25], keys[6]);
-        e3 = _mm512_xor_si512(r[26], keys[11]);
-        e4 = _mm512_xor_si512(r[27], keys[0]);
-        e5 = _mm512_xor_si512(r[28], keys[22]);
-
-        f0 = _mm512_xor_si512(r[27], keys[8]);
-        f1 = _mm512_xor_si512(r[28], keys[17]);
-        f2 = _mm512_xor_si512(r[29], keys[4]);
-        f3 = _mm512_xor_si512(r[30], keys[19]);
-        f4 = _mm512_xor_si512(r[31], keys[9]);
-        f5 = _mm512_xor_si512(r[0], keys[1]);
-
+        //s4 compute
         {
-            let (o0, o1, o2, o3) = s7_avx(e0, e1, e2, e3, e4, e5);
-            let (p0, p1, p2, p3) = s8_avx(f0, f1, f2, f3, f4, f5);
+            let (o0, o1, o2, o3) = s4_avx_2(h0, h1, h2, h3, h4, h5);
+            l[25] = _mm256_xor_si256(l[25], o0);
+            l[19] = _mm256_xor_si256(l[19], o1);
+            l[9] = _mm256_xor_si256(l[9], o2);
+            l[0] = _mm256_xor_si256(l[0], o3);
+        }
 
-            l[31] = _mm512_xor_si512(l[31], o0);
-            l[11] = _mm512_xor_si512(l[11], o1);
-            l[21] = _mm512_xor_si512(l[21], o2);
-            l[6] = _mm512_xor_si512(l[6], o3);
+        //s5 expand
+        e0 = _mm256_xor_si256(r[15], keys[SUBKEY_SCHEDULE[round][24]]);
+        e1 = _mm256_xor_si256(r[16], keys[SUBKEY_SCHEDULE[round][25]]);
+        e2 = _mm256_xor_si256(r[17], keys[SUBKEY_SCHEDULE[round][26]]);
+        e3 = _mm256_xor_si256(r[18], keys[SUBKEY_SCHEDULE[round][27]]);
+        e4 = _mm256_xor_si256(r[19], keys[SUBKEY_SCHEDULE[round][28]]);
+        e5 = _mm256_xor_si256(r[20], keys[SUBKEY_SCHEDULE[round][29]]);
 
-            l[4] = _mm512_xor_si512(l[4], p0);
-            l[26] = _mm512_xor_si512(l[26], p1);
-            l[14] = _mm512_xor_si512(l[14], p2);
-            l[20] = _mm512_xor_si512(l[20], p3);
+        //s6 expand
+        f0 = _mm256_xor_si256(r[19], keys[SUBKEY_SCHEDULE[round][30]]);
+        f1 = _mm256_xor_si256(r[20], keys[SUBKEY_SCHEDULE[round][31]]);
+        f2 = _mm256_xor_si256(r[21], keys[SUBKEY_SCHEDULE[round][32]]);
+        f3 = _mm256_xor_si256(r[22], keys[SUBKEY_SCHEDULE[round][33]]);
+        f4 = _mm256_xor_si256(r[23], keys[SUBKEY_SCHEDULE[round][34]]);
+        f5 = _mm256_xor_si256(r[24], keys[SUBKEY_SCHEDULE[round][35]]);
+
+        //s7 expand
+        g0 = _mm256_xor_si256(r[23], keys[SUBKEY_SCHEDULE[round][36]]);
+        g1 = _mm256_xor_si256(r[24], keys[SUBKEY_SCHEDULE[round][37]]);
+        g2 = _mm256_xor_si256(r[25], keys[SUBKEY_SCHEDULE[round][38]]);
+        g3 = _mm256_xor_si256(r[26], keys[SUBKEY_SCHEDULE[round][39]]);
+        g4 = _mm256_xor_si256(r[27], keys[SUBKEY_SCHEDULE[round][40]]);
+        g5 = _mm256_xor_si256(r[28], keys[SUBKEY_SCHEDULE[round][41]]);
+
+        //s8 expand
+        h0 = _mm256_xor_si256(r[27], keys[SUBKEY_SCHEDULE[round][42]]);
+        h1 = _mm256_xor_si256(r[28], keys[SUBKEY_SCHEDULE[round][43]]);
+        h2 = _mm256_xor_si256(r[29], keys[SUBKEY_SCHEDULE[round][44]]);
+        h3 = _mm256_xor_si256(r[30], keys[SUBKEY_SCHEDULE[round][45]]);
+        h4 = _mm256_xor_si256(r[31], keys[SUBKEY_SCHEDULE[round][46]]);
+        h5 = _mm256_xor_si256(r[0], keys[SUBKEY_SCHEDULE[round][47]]);
+
+        //s5 compute
+        {
+            let (o0, o1, o2, o3) = s5_avx_2(e0, e1, e2, e3, e4, e5);
+            l[7] = _mm256_xor_si256(l[7], o0);
+            l[13] = _mm256_xor_si256(l[13], o1);
+            l[24] = _mm256_xor_si256(l[24], o2);
+            l[2] = _mm256_xor_si256(l[2], o3);
+        }
+
+        //s6 compute
+        {
+            let (o0, o1, o2, o3) = s6_avx_2(f0, f1, f2, f3, f4, f5);
+            l[3] = _mm256_xor_si256(l[3], o0);
+            l[28] = _mm256_xor_si256(l[28], o1);
+            l[10] = _mm256_xor_si256(l[10], o2);
+            l[18] = _mm256_xor_si256(l[18], o3);
+        }
+
+        //s7 compute
+        {
+            let (o0, o1, o2, o3) = s7_avx_2(g0, g1, g2, g3, g4, g5);
+            l[31] = _mm256_xor_si256(l[31], o0);
+            l[11] = _mm256_xor_si256(l[11], o1);
+            l[21] = _mm256_xor_si256(l[21], o2);
+            l[6] = _mm256_xor_si256(l[6], o3);
+        }
+
+        //s8 compute
+        {
+            let (o0, o1, o2, o3) = s8_avx_2(h0, h1, h2, h3, h4, h5);
+            l[4] = _mm256_xor_si256(l[4], o0);
+            l[26] = _mm256_xor_si256(l[26], o1);
+            l[14] = _mm256_xor_si256(l[14], o2);
+            l[20] = _mm256_xor_si256(l[20], o3);
         }
     }
 }
