@@ -1,5 +1,5 @@
 use std::{
-    arch::x86_64::{__m512i, _mm512_setzero_si512},
+    arch::x86_64::{__m256i, __m512i, _mm256_setzero_si256, _mm512_setzero_si512},
     env,
     sync::Arc,
     thread,
@@ -7,10 +7,10 @@ use std::{
 
 use fast_des::{
     benchmark::{benchmark, benchmark_parallel},
-    bitsliced_des_inline_simd, bitsliced_des_inline_simd_avx, bitsliced_des_simd,
-    bitsliced_des_simd_avx, bitsliced_netntlmv1_inline_simd_avx, bitsliced_netntlmv1_simd, des,
+    bitsliced_des_inline_simd, bitsliced_des_inline_simd_avx_512, bitsliced_des_simd,
+    bitsliced_des_simd_avx_512, bitsliced_netntlmv1_inline_simd_avx_2,
+    bitsliced_netntlmv1_inline_simd_avx_512, bitsliced_netntlmv1_simd, des,
 };
-use wide::u64x8;
 
 const KEY: u64 = 0xABCDEF1234567890;
 const PLAINTEXT: u64 = 0x8877665544332211;
@@ -38,39 +38,65 @@ fn start_benchmark(benchmark_name: &str) {
                 bitsliced_des_simd(PLAINTEXT, &mut keys);
             });
         }
-        "davx" | "des_avx" => unsafe {
+        "davx512" | "des_avx_512" => unsafe {
             let keys = [[0; 64]; 8];
 
-            benchmark("des_avx", 10_000_000, 1_000_000, 512, || {
-                bitsliced_des_simd_avx(&keys);
+            benchmark("des_avx_512", 10_000_000, 1_000_000, 512, || {
+                bitsliced_des_simd_avx_512(&keys);
             });
         },
-        "davxi" | "des_avx_inline" => unsafe {
+        "davx512i" | "des_avx_512_inline" => unsafe {
             let mut keys: [__m512i; 64] = [_mm512_setzero_si512(); 64];
 
-            benchmark("des_avx_inline", 10_000_000, 1_000_000, 512, || {
-                bitsliced_des_inline_simd_avx(&mut keys);
+            benchmark("des_avx_512_inline", 10_000_000, 1_000_000, 512, || {
+                bitsliced_des_inline_simd_avx_512(&mut keys);
             });
         },
-        "davxip" | "des_avx_parallel" => unsafe {
+        "davx512ip" | "des_avx_512_parallel" => unsafe {
             let keys: [__m512i; 64] = [_mm512_setzero_si512(); 64];
-            benchmark_parallel("des_avx_parallel", 10_000_000, 512, 32, move || {
+            benchmark_parallel("des_avx_512_parallel", 10_000_000, 512, 32, move || {
                 let mut keys = keys.clone();
-                bitsliced_des_inline_simd_avx(&mut keys);
+                bitsliced_des_inline_simd_avx_512(&mut keys);
             });
         },
-        "navxi" | "netntlmv1_avx_inline" => unsafe {
+        "navx512i" | "netntlmv1_avx_512_inline" => unsafe {
             let mut keys: [__m512i; 64] = [_mm512_setzero_si512(); 64];
 
-            benchmark("netntlmv1_avx_inline", 10_000_000, 1_000_000, 512, || {
-                bitsliced_netntlmv1_inline_simd_avx(&mut keys);
+            benchmark(
+                "netntlmv1_avx_512_inline",
+                10_000_000,
+                1_000_000,
+                512,
+                || {
+                    bitsliced_netntlmv1_inline_simd_avx_512(&mut keys);
+                },
+            );
+        },
+        "navxi512p" | "netntlmv1_avx_512_parallel" => unsafe {
+            let keys: [__m512i; 64] = [_mm512_setzero_si512(); 64];
+            benchmark_parallel(
+                "netntlmv1_avx_512_parallel",
+                10_000_000,
+                512,
+                32,
+                move || {
+                    let mut keys = keys.clone();
+                    bitsliced_netntlmv1_inline_simd_avx_512(&mut keys);
+                },
+            );
+        },
+        "navx2i" | "netntlmv1_avx_2_inline" => unsafe {
+            let mut keys: [__m256i; 64] = [_mm256_setzero_si256(); 64];
+
+            benchmark("netntlmv1_avx_2_inline", 10_000_000, 1_000_000, 512, || {
+                bitsliced_netntlmv1_inline_simd_avx_2(&mut keys);
             });
         },
-        "navxip" | "netntlmv1_avx_parallel" => unsafe {
-            let keys: [__m512i; 64] = [_mm512_setzero_si512(); 64];
-            benchmark_parallel("netntlmv1_avx_parallel", 10_000_000, 512, 32, move || {
+        "navx2ip" | "netntlmv1_avx_2_parallel" => unsafe {
+            let keys: [__m256i; 64] = [_mm256_setzero_si256(); 64];
+            benchmark_parallel("netntlmv1_avx_2_parallel", 10_000_000, 512, 16, move || {
                 let mut keys = keys.clone();
-                bitsliced_netntlmv1_inline_simd_avx(&mut keys);
+                bitsliced_netntlmv1_inline_simd_avx_2(&mut keys);
             });
         },
 
