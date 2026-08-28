@@ -88,13 +88,13 @@ fn start_benchmark(benchmark_name: &str) {
         "navx2i" | "netntlmv1_avx_2_inline" => unsafe {
             let mut keys: [__m256i; 64] = [_mm256_setzero_si256(); 64];
 
-            benchmark("netntlmv1_avx_2_inline", 10_000_000, 1_000_000, 512, || {
+            benchmark("netntlmv1_avx_2_inline", 10_000_000, 1_000_000, 256, || {
                 bitsliced_netntlmv1_inline_simd_avx_2(&mut keys);
             });
         },
         "navx2ip" | "netntlmv1_avx_2_parallel" => unsafe {
             let keys: [__m256i; 64] = [_mm256_setzero_si256(); 64];
-            benchmark_parallel("netntlmv1_avx_2_parallel", 10_000_000, 512, 16, move || {
+            benchmark_parallel("netntlmv1_avx_2_parallel", 10_000_000, 256, 16, move || {
                 let mut keys = keys.clone();
                 bitsliced_netntlmv1_inline_simd_avx_2(&mut keys);
             });

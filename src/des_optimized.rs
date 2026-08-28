@@ -933,7 +933,7 @@ pub fn encrypt_avx_2(keys: &mut [__m256i; 64]) {
     ];
     // round 0
     unsafe {
-        feistel_avx_2(&mut l, &mut r, keys, 0);
+        feistel_avx_2_round_0(&mut l, &mut r, keys);
     }
     // round 1
     unsafe {
@@ -1071,6 +1071,152 @@ pub fn encrypt_avx_2(keys: &mut [__m256i; 64]) {
         *out.add(61) = r[16];
         *out.add(62) = l[24];
         *out.add(63) = r[24];
+    }
+}
+
+#[inline(always)]
+pub unsafe fn feistel_avx_2_round_0(
+    l: &mut [__m256i; 32],
+    r: &mut [__m256i; 32],
+    keys: &[__m256i; 64],
+) {
+    unsafe {
+        //s1 expand
+        let mut e0 = keys[SUBKEY_SCHEDULE[0][0]];
+        let mut e1 = _mm256_xor_si256(r[0], keys[SUBKEY_SCHEDULE[0][1]]);
+        let mut e2 = keys[SUBKEY_SCHEDULE[0][2]];
+        let mut e3 = keys[SUBKEY_SCHEDULE[0][3]];
+        let mut e4 = keys[SUBKEY_SCHEDULE[0][4]];
+        let mut e5 = keys[SUBKEY_SCHEDULE[0][5]];
+
+        //s2 expand
+        let mut f0 = keys[SUBKEY_SCHEDULE[0][6]];
+        let mut f1 = keys[SUBKEY_SCHEDULE[0][7]];
+        let mut f2 = keys[SUBKEY_SCHEDULE[0][8]];
+        let mut f3 = keys[SUBKEY_SCHEDULE[0][9]];
+        let mut f4 = keys[SUBKEY_SCHEDULE[0][10]];
+        let mut f5 = keys[SUBKEY_SCHEDULE[0][11]];
+
+        //s3 expand
+        let mut g0 = keys[SUBKEY_SCHEDULE[0][12]];
+        let mut g1 = keys[SUBKEY_SCHEDULE[0][13]];
+        let mut g2 = _mm256_xor_si256(r[9], keys[SUBKEY_SCHEDULE[0][14]]);
+        let mut g3 = _mm256_xor_si256(r[10], keys[SUBKEY_SCHEDULE[0][15]]);
+        let mut g4 = keys[SUBKEY_SCHEDULE[0][16]];
+        let mut g5 = keys[SUBKEY_SCHEDULE[0][17]];
+
+        //s4 expand
+        let mut h0 = keys[SUBKEY_SCHEDULE[0][18]];
+        let mut h1 = keys[SUBKEY_SCHEDULE[0][19]];
+        let mut h2 = _mm256_xor_si256(r[13], keys[SUBKEY_SCHEDULE[0][20]]);
+        let mut h3 = _mm256_xor_si256(r[14], keys[SUBKEY_SCHEDULE[0][21]]);
+        let mut h4 = keys[SUBKEY_SCHEDULE[0][22]];
+        let mut h5 = _mm256_xor_si256(r[16], keys[SUBKEY_SCHEDULE[0][23]]);
+
+        //s1 compute
+        //use inner block to free o registers
+        {
+            let (o0, o1, o2, o3) = s1_avx_2(e0, e1, e2, e3, e4, e5);
+            l[8] = o0;
+            l[16] = o1;
+            l[22] = o2;
+            l[30] = o3;
+        }
+
+        //s2 compute
+        {
+            let (o0, o1, o2, o3) = s2_avx_2(f0, f1, f2, f3, f4, f5);
+            l[12] = o0;
+            l[27] = _mm256_xor_si256(l[27], o1);
+            l[1] = _mm256_xor_si256(l[1], o2);
+            l[17] = _mm256_xor_si256(l[17], o3);
+        }
+
+        //s3 compute
+        {
+            let (o0, o1, o2, o3) = s3_avx_2(g0, g1, g2, g3, g4, g5);
+            l[23] = o0;
+            l[15] = _mm256_xor_si256(l[15], o1);
+            l[29] = _mm256_xor_si256(l[29], o2);
+            l[5] = o3;
+        }
+
+        //s4 compute
+        {
+            let (o0, o1, o2, o3) = s4_avx_2(h0, h1, h2, h3, h4, h5);
+            l[25] = _mm256_xor_si256(l[25], o0);
+            l[19] = _mm256_xor_si256(l[19], o1);
+            l[9] = _mm256_xor_si256(l[9], o2);
+            l[0] = o3;
+        }
+
+        //s5 expand
+        e0 = keys[SUBKEY_SCHEDULE[0][24]];
+        e1 = _mm256_xor_si256(r[16], keys[SUBKEY_SCHEDULE[0][25]]);
+        e2 = keys[SUBKEY_SCHEDULE[0][26]];
+        e3 = keys[SUBKEY_SCHEDULE[0][27]];
+        e4 = keys[SUBKEY_SCHEDULE[0][28]];
+        e5 = keys[SUBKEY_SCHEDULE[0][29]];
+
+        //s6 expand
+        f0 = keys[SUBKEY_SCHEDULE[0][30]];
+        f1 = keys[SUBKEY_SCHEDULE[0][31]];
+        f2 = keys[SUBKEY_SCHEDULE[0][32]];
+        f3 = keys[SUBKEY_SCHEDULE[0][33]];
+        f4 = keys[SUBKEY_SCHEDULE[0][34]];
+        f5 = keys[SUBKEY_SCHEDULE[0][35]];
+
+        //s7 expand
+        g0 = keys[SUBKEY_SCHEDULE[0][36]];
+        g1 = keys[SUBKEY_SCHEDULE[0][37]];
+        g2 = _mm256_xor_si256(r[25], keys[SUBKEY_SCHEDULE[0][38]]);
+        g3 = _mm256_xor_si256(r[26], keys[SUBKEY_SCHEDULE[0][39]]);
+        g4 = keys[SUBKEY_SCHEDULE[0][40]];
+        g5 = keys[SUBKEY_SCHEDULE[0][41]];
+
+        //s8 expand
+        h0 = keys[SUBKEY_SCHEDULE[0][42]];
+        h1 = keys[SUBKEY_SCHEDULE[0][43]];
+        h2 = _mm256_xor_si256(r[29], keys[SUBKEY_SCHEDULE[0][44]]);
+        h3 = _mm256_xor_si256(r[30], keys[SUBKEY_SCHEDULE[0][45]]);
+        h4 = keys[SUBKEY_SCHEDULE[0][46]];
+        h5 = _mm256_xor_si256(r[0], keys[SUBKEY_SCHEDULE[0][47]]);
+
+        //s5 compute
+        {
+            let (o0, o1, o2, o3) = s5_avx_2(e0, e1, e2, e3, e4, e5);
+            l[7] = o0;
+            l[13] = _mm256_xor_si256(l[13], o1);
+            l[24] = o2;
+            l[2] = _mm256_xor_si256(l[2], o3);
+        }
+
+        //s6 compute
+        {
+            let (o0, o1, o2, o3) = s6_avx_2(f0, f1, f2, f3, f4, f5);
+            l[3] = _mm256_xor_si256(l[3], o0);
+            l[28] = o1;
+            l[10] = o2;
+            l[18] = _mm256_xor_si256(l[18], o3);
+        }
+
+        //s7 compute
+        {
+            let (o0, o1, o2, o3) = s7_avx_2(g0, g1, g2, g3, g4, g5);
+            l[31] = _mm256_xor_si256(l[31], o0);
+            l[11] = _mm256_xor_si256(l[11], o1);
+            l[21] = o2;
+            l[6] = o3;
+        }
+
+        //s8 compute
+        {
+            let (o0, o1, o2, o3) = s8_avx_2(h0, h1, h2, h3, h4, h5);
+            l[4] = _mm256_xor_si256(l[4], o0);
+            l[26] = o1;
+            l[14] = o2;
+            l[20] = _mm256_xor_si256(l[20], o3);
+        }
     }
 }
 
